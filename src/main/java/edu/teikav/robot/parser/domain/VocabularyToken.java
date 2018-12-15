@@ -1,7 +1,10 @@
 package edu.teikav.robot.parser.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.Objects;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VocabularyToken implements Cloneable {
 
     private Languages language;

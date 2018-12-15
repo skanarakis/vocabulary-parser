@@ -60,5 +60,9 @@ public class PublisherGrammarContext {
         return Optional.of(grammarType);
     }
 
+    public List<VocabularyToken> getTokenSpecs() {
+        return tokenSpecs;
+    }
+
     // helper methods to allow clients check their next token according to grammar rules
 }

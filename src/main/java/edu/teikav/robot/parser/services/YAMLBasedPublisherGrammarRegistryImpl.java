@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class YAMLBasedPublisherGrammarRegistryImpl implements PublisherGrammarRegistry {
@@ -56,14 +54,12 @@ public class YAMLBasedPublisherGrammarRegistryImpl implements PublisherGrammarRe
 
     @Override
     public void loadSingleGrammar(InputStream inputStream){
-        logger.info("Calling loadSingleGrammar **************************************");
         PublisherGrammar grammar = yaml.load(inputStream);
         loadContext(nextID.incrementAndGet(), grammar);
     }
 
     @Override
     public void loadMultipleGrammars(InputStream inputStream) {
-        logger.info("Calling loadMultipleGrammars **************************************");
         yaml.loadAll(inputStream)
                 .forEach(g-> loadContext(nextID.incrementAndGet(), (PublisherGrammar)g));
     }
@@ -83,10 +79,12 @@ public class YAMLBasedPublisherGrammarRegistryImpl implements PublisherGrammarRe
         Optional<Map.Entry<Integer, PublisherGrammar>> grammar = grammars.entrySet().stream()
                 .filter(e -> e.getValue().getPublisher().equals(publisher))
                 .findFirst();
-        if (grammar.isPresent()) {
-            return grammarContexts.get(grammar.get().getKey());
-        }
-        return null;
+        return grammar.map(e -> grammarContexts.get(e.getKey())).orElse(null);
+    }
+
+    @Override
+    public List<PublisherGrammarContext> getGrammarContexts() {
+        return new ArrayList<>(grammarContexts.values());
     }
 
     @Override

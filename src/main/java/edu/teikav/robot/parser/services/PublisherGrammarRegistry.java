@@ -4,6 +4,7 @@ import edu.teikav.robot.parser.domain.Publisher;
 import edu.teikav.robot.parser.domain.PublisherGrammarContext;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Optional;
 
 public interface PublisherGrammarRegistry {
@@ -23,4 +24,6 @@ public interface PublisherGrammarRegistry {
     int numberOfGrammars();
 
     void clean();
+
+    List<PublisherGrammarContext> getGrammarContexts();
 }

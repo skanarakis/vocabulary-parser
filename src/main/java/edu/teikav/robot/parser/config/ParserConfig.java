@@ -37,4 +37,5 @@ public class ParserConfig {
         Yaml yaml = new Yaml(new Constructor(PublisherGrammar.class));
         return new YAMLBasedPublisherGrammarRegistryImpl(yaml);
     }
+
 }
