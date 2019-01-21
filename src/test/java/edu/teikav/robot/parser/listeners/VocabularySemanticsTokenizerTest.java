@@ -54,9 +54,8 @@ public class VocabularySemanticsTokenizerTest {
         registry = new YAMLBasedPublisherGrammarRegistryImpl(new Yaml(new Constructor(PublisherGrammar.class)));
         InputStream publishersInputStream = VocabularySemanticsTokenizerTest.class
                 .getClassLoader()
-                .getResourceAsStream("publishers/two-publishers.yaml");
+                .getResourceAsStream("publishers/all-publishers.yaml");
         registry.loadMultipleGrammars(publishersInputStream);
-        Assertions.assertThat(registry.numberOfGrammars()).isEqualTo(2);
     }
 
     @Before
@@ -65,7 +64,7 @@ public class VocabularySemanticsTokenizerTest {
     }
 
     @Test
-    public void shouldParseVocabularyRTFAsXML_forFirstPublisher() throws IOException, XMLStreamException {
+    public void inventoriesVocabularyForFirstPublisher() throws IOException, XMLStreamException {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
                 "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -97,7 +96,7 @@ public class VocabularySemanticsTokenizerTest {
     }
 
     @Test
-    public void shouldParseVocabularyRTFAsXML_forSecondPublisher() throws IOException, XMLStreamException {
+    public void inventoriesVocabularyForSecondPublisher() throws IOException, XMLStreamException {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
                 "sample-vocabulary-02.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -123,6 +122,37 @@ public class VocabularySemanticsTokenizerTest {
         Assertions.assertThat(inventoryService.existsInventoryItem("prolonged")).isTrue();
         Assertions.assertThat(inventoryService.existsInventoryItem("shade")).isTrue();
         Assertions.assertThat(inventoryService.existsInventoryItem("subtle")).isTrue();
+    }
+
+    @Test
+    public void inventoriesVocabularyForThirdPublisher() throws IOException, XMLStreamException {
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
+                "Our-w-2b.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+
+        // Make the first pass
+        IRtfListener vocabularyIdentifier = new VocabularyIdentifier(registry, firstPassOutputStream);
+        parser.parse(source, vocabularyIdentifier);
+
+        // Need to reset input stream
+        inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
+                "Our-w-2b.rtf");
+        source = new RtfStreamSource(inputStream);
+
+        // Make the second pass
+        IRtfListener vocabularySemanticsTokenizer = new VocabularySemanticsTokenizer(registry,
+                inventoryService, secondPassOutputStream);
+        parser.parse(source, vocabularySemanticsTokenizer);
+
+        Assertions.assertThat(inventoryService.numberOfInventoryTerms()).isEqualTo(7);
+        Assertions.assertThat(inventoryService.existsInventoryItem("neighbour")).isTrue();
+        Assertions.assertThat(inventoryService.existsInventoryItem("lighthouse")).isTrue();
+        Assertions.assertThat(inventoryService.existsInventoryItem("keeper")).isTrue();
+        Assertions.assertThat(inventoryService.existsInventoryItem("coast")).isTrue();
+        Assertions.assertThat(inventoryService.existsInventoryItem("mean")).isTrue();
+        Assertions.assertThat(inventoryService.existsInventoryItem("tower")).isTrue();
+        Assertions.assertThat(inventoryService.existsInventoryItem("shine")).isTrue();
     }
 
     @TestConfiguration

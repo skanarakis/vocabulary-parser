@@ -52,6 +52,16 @@ public class YAMLBasedPublisherGrammarRegistryImplTest {
     }
 
     @Test
+    public void loadAllGrammars() {
+
+        InputStream inputStream = this.getClass()
+                .getClassLoader()
+                .getResourceAsStream("publishers/all-publishers.yaml");
+        registry.loadMultipleGrammars(inputStream);
+        Assertions.assertThat(registry.numberOfGrammars()).isEqualTo(3);
+    }
+
+    @Test
     public void loadedGrammarShouldReflectYAMLFile() {
 
         InputStream inputStream = this.getClass()

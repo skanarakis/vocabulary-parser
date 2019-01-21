@@ -77,7 +77,7 @@ public class VocabularySemanticsTokenizer extends AbstractRTFCommandsCallbackPro
         if (signalBeginningOfVocabulary) {
 
             if (vocabularyPartsIterator.hasNext()) {
-
+                logger.debug("Processing vocabulary token >>{}<<", tokenString);
                 currentToken.setTokenString(tokenString.trim());
 
                 // Take the next part of the vocabulary

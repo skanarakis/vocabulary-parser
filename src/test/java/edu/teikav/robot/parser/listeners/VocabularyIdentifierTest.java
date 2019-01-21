@@ -108,6 +108,27 @@ public class VocabularyIdentifierTest {
     }
 
     @Test
+    public void identifyGrammarOfFirstPublisher_whenRealRegistry_hasManyRegisteredGrammars()
+            throws IOException, XMLStreamException {
+
+        PublisherGrammarRegistry registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
+        PublisherGrammarRegistry spiedRegistry = Mockito.spy(registry);
+
+        InputStream publishersInputStream = this.getClass()
+                .getClassLoader()
+                .getResourceAsStream("publishers/all-publishers.yaml");
+        spiedRegistry.loadMultipleGrammars(publishersInputStream);
+
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+        IRtfListener firstPassListener = new VocabularyIdentifier(spiedRegistry, outputStream);
+        parser.parse(source, firstPassListener);
+
+        Mockito.verify(spiedRegistry, Mockito.times(5)).findGrammar(any(Integer.class));
+    }
+
+    @Test
     public void identifyGrammarOfSecondPublisher_whenRealRegistry_hasTwoRegisteredGrammars()
             throws IOException, XMLStreamException {
 
@@ -127,6 +148,27 @@ public class VocabularyIdentifierTest {
         parser.parse(source, firstPassListener);
 
         Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
+    }
+
+    @Test
+    public void identifyGrammarOfThirdPublisher_whenRealRegistry_hasManyRegisteredGrammars()
+            throws IOException, XMLStreamException {
+
+        PublisherGrammarRegistry registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
+        PublisherGrammarRegistry spiedRegistry = Mockito.spy(registry);
+
+        InputStream publishersInputStream = this.getClass()
+                .getClassLoader()
+                .getResourceAsStream("publishers/all-publishers.yaml");
+        spiedRegistry.loadMultipleGrammars(publishersInputStream);
+
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "Our-w-2b.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+        IRtfListener firstPassListener = new VocabularyIdentifier(spiedRegistry, outputStream);
+        parser.parse(source, firstPassListener);
+
+        Mockito.verify(spiedRegistry, Mockito.times(5)).findGrammar(any(Integer.class));
     }
 
     @TestConfiguration
