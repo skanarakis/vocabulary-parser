@@ -1,20 +1,22 @@
 package edu.teikav.robot.parser.listeners;
 
-import com.rtfparserkit.parser.IRtfListener;
-import com.rtfparserkit.parser.IRtfParser;
-import com.rtfparserkit.parser.IRtfSource;
-import com.rtfparserkit.parser.RtfStreamSource;
-import com.rtfparserkit.parser.standard.StandardRtfParser;
-import edu.teikav.robot.parser.domain.PublisherGrammar;
-import edu.teikav.robot.parser.domain.TermGrammarTypes;
-import edu.teikav.robot.parser.services.InMemoryInventoryServiceImpl;
-import edu.teikav.robot.parser.services.InventoryService;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
-import edu.teikav.robot.parser.services.YAMLBasedPublisherGrammarRegistryImpl;
+import static edu.teikav.robot.parser.ParserStaticConstants.FIRST_PASS_TEST_OUTPUT_XML_FILENAME;
+import static edu.teikav.robot.parser.ParserStaticConstants.SECOND_PASS_TEST_OUTPUT_XML_FILENAME;
+import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
+import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import javax.xml.stream.XMLStreamException;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,15 +28,26 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
-import javax.xml.stream.XMLStreamException;
-import java.io.*;
+import com.rtfparserkit.parser.IRtfListener;
+import com.rtfparserkit.parser.IRtfParser;
+import com.rtfparserkit.parser.IRtfSource;
+import com.rtfparserkit.parser.RtfStreamSource;
+import com.rtfparserkit.parser.standard.StandardRtfParser;
 
-import static edu.teikav.robot.parser.ParserStaticConstants.*;
+import edu.teikav.robot.parser.FileUtils;
+import edu.teikav.robot.parser.IntegrationTest;
+import edu.teikav.robot.parser.domain.PublisherGrammar;
+import edu.teikav.robot.parser.domain.TermGrammarTypes;
+import edu.teikav.robot.parser.services.InMemoryInventoryServiceImpl;
+import edu.teikav.robot.parser.services.InventoryService;
+import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
+import edu.teikav.robot.parser.services.YAMLBasedPublisherGrammarRegistryImpl;
 
 @RunWith(SpringRunner.class)
-public class VocabularySemanticsTokenizerTest {
+@Category(IntegrationTest.class)
+public class VocabularySemanticsTokenizerIT {
 
-    private Logger logger = LoggerFactory.getLogger(VocabularySemanticsTokenizerTest.class);
+    private Logger logger = LoggerFactory.getLogger(VocabularySemanticsTokenizerIT.class);
 
     private static PublisherGrammarRegistry registry;
 
@@ -52,7 +65,7 @@ public class VocabularySemanticsTokenizerTest {
     public static void preloadRegistry() {
 
         registry = new YAMLBasedPublisherGrammarRegistryImpl(new Yaml(new Constructor(PublisherGrammar.class)));
-        InputStream publishersInputStream = VocabularySemanticsTokenizerTest.class
+        InputStream publishersInputStream = VocabularySemanticsTokenizerIT.class
                 .getClassLoader()
                 .getResourceAsStream("publishers/all-publishers.yaml");
         registry.loadMultipleGrammars(publishersInputStream);
@@ -127,7 +140,7 @@ public class VocabularySemanticsTokenizerTest {
     @Test
     public void inventoriesVocabularyForThirdPublisher() throws IOException, XMLStreamException {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
-                "Our-w-2b.rtf");
+                "OurW-2b.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
 
@@ -137,7 +150,7 @@ public class VocabularySemanticsTokenizerTest {
 
         // Need to reset input stream
         inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
-                "Our-w-2b.rtf");
+                "OurW-2b.rtf");
         source = new RtfStreamSource(inputStream);
 
         // Make the second pass
@@ -160,15 +173,15 @@ public class VocabularySemanticsTokenizerTest {
 
         @Bean
         @Qualifier("FirstPassOutputStream")
-        OutputStream firstPassOutputStream() throws FileNotFoundException {
-            return new FileOutputStream(TEST_OUTPUT_XML_DOCS_PATH +
+        OutputStream firstPassOutputStream() throws IOException {
+            return FileUtils.getOutputStream(TEST_OUTPUT_XML_DOCS_PATH +
                     FIRST_PASS_TEST_OUTPUT_XML_FILENAME);
         }
 
         @Bean
         @Qualifier("SecondPassOutputStream")
-        OutputStream secondPassOutputStream() throws FileNotFoundException {
-            return new FileOutputStream(TEST_OUTPUT_XML_DOCS_PATH +
+        OutputStream secondPassOutputStream() throws IOException {
+            return FileUtils.getOutputStream(TEST_OUTPUT_XML_DOCS_PATH +
                     SECOND_PASS_TEST_OUTPUT_XML_FILENAME);
         }
     }

@@ -5,6 +5,7 @@ import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
 import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +21,10 @@ import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class VocabularyParserTest {
+@Category(IntegrationTest.class)
+public class VocabularyParserIT {
 
-    private Logger logger = LoggerFactory.getLogger(VocabularyParserTest.class);
+    private Logger logger = LoggerFactory.getLogger(VocabularyParserIT.class);
 
     @Autowired
     private VocabularyParser vocabularyParser;

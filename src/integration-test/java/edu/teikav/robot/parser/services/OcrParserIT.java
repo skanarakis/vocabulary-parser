@@ -5,6 +5,7 @@ import org.bytedeco.javacpp.lept;
 import org.bytedeco.javacpp.tesseract;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +19,14 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotEquals;
 
+import edu.teikav.robot.parser.IntegrationTest;
+
 @RunWith(SpringRunner.class)
-public class OCRParserTests {
+@Category(IntegrationTest.class)
+public class OcrParserIT {
 
     private static tesseract.TessBaseAPI ocrBaseAPI;
-    private Logger logger = LoggerFactory.getLogger(OCRParserTests.class);
+    private Logger logger = LoggerFactory.getLogger(OcrParserIT.class);
 
     @BeforeClass
     public static void initialize() {

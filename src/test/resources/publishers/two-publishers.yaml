@@ -2,17 +2,8 @@ publisher:
   name: Publisher A
   description: PubA Description
   publicationYear: 2018
-vocabularyTokensOrdering: GARBAGE TERM GRAMMAR_TYPE TRANSLATION EXAMPLE
+vocabularyTokensOrdering: TERM GRAMMAR_TYPE TRANSLATION EXAMPLE
 vocabularyTokenSpecs:
-- tokenType: GARBAGE
-  textPoints: 9
-  language: ENGLISH
-  color:
-    red: 0
-    green: 0
-    blue: 0
-  italicized: false
-  bold: false
 - tokenType: TERM
   textPoints: 11
   language: ENGLISH

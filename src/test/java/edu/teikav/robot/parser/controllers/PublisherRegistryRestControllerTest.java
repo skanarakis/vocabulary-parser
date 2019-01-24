@@ -232,11 +232,11 @@ public class PublisherRegistryRestControllerTest {
 
         @Bean
         public PublisherGrammarRegistry getRegistry() {
-            return new YAMLBasedPublisherGrammarRegistryImpl(getYaml());
+            return new YAMLBasedPublisherGrammarRegistryImpl(getYAML());
         }
 
         @Bean
-        public Yaml getYaml() {
+        public Yaml getYAML() {
             return new Yaml(new Constructor(PublisherGrammar.class));
         }
     }

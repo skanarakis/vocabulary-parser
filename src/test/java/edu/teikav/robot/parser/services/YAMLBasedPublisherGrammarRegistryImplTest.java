@@ -1,34 +1,27 @@
 package edu.teikav.robot.parser.services;
 
-import edu.teikav.robot.parser.domain.Publisher;
-import edu.teikav.robot.parser.domain.PublisherGrammar;
-import edu.teikav.robot.parser.domain.PublisherGrammarContext;
+import java.io.InputStream;
+import java.util.Arrays;
+
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
-import java.io.InputStream;
-import java.util.Arrays;
+import edu.teikav.robot.parser.domain.Publisher;
+import edu.teikav.robot.parser.domain.PublisherGrammar;
+import edu.teikav.robot.parser.domain.PublisherGrammarContext;
 
-@RunWith(SpringRunner.class)
 public class YAMLBasedPublisherGrammarRegistryImplTest {
-
-    @Autowired
-    private Yaml yaml;
 
     private PublisherGrammarRegistry registry;
 
     @Before
     public void initialize() {
-        registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
+        registry = new YAMLBasedPublisherGrammarRegistryImpl(
+                new Yaml(new Constructor(PublisherGrammar.class)));
     }
 
     @Test
@@ -79,20 +72,10 @@ public class YAMLBasedPublisherGrammarRegistryImplTest {
         Assertions.assertThat(context).isNotNull();
 
         SoftAssertions softAssertions = new SoftAssertions();
-        softAssertions.assertThat(context.numberOfVocabularyDifferentParts()).isEqualTo(5);
-        softAssertions.assertThat(context.getGrammarHashCode()).isEqualTo(2045894956);
-        String[] ordering = {"GARBAGE", "TERM", "GRAMMAR_TYPE", "TRANSLATION", "EXAMPLE"};
+        softAssertions.assertThat(context.numberOfVocabularyDifferentParts()).isEqualTo(4);
+        String[] ordering = {"TERM", "GRAMMAR_TYPE", "TRANSLATION", "EXAMPLE"};
         softAssertions.assertThat(context.vocabularyOrdering()).isEqualTo(Arrays.asList(ordering));
         softAssertions.assertThat(context.getPublisher()).isEqualTo(publisher);
         softAssertions.assertAll();
-    }
-
-    @TestConfiguration
-    static class PublisherGrammarTestConfiguration {
-
-        @Bean
-        public Yaml getYaml() {
-           return new Yaml(new Constructor(PublisherGrammar.class));
-        }
     }
 }
