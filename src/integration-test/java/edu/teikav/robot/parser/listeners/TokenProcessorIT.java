@@ -27,7 +27,7 @@ public class TokenProcessorIT {
 
     @Test
     public void processTokenForOurW2bPublisherFormat() throws IOException, XMLStreamException {
-        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "OurW-2b.rtf");
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "OurW-2b-complete.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
 

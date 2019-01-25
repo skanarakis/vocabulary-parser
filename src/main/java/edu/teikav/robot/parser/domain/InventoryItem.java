@@ -1,5 +1,7 @@
 package edu.teikav.robot.parser.domain;
 
+import java.util.Objects;
+
 public class InventoryItem {
 
     private String term;
@@ -46,6 +48,24 @@ public class InventoryItem {
 
     public void setPronunciation(String pronunciation) {
         this.pronunciation = pronunciation;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InventoryItem that = (InventoryItem) o;
+        return Objects.equals(term, that.term) &&
+                termType == that.termType &&
+                Objects.equals(translation, that.translation) &&
+                Objects.equals(example, that.example) &&
+                Objects.equals(pronunciation, that.pronunciation);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(term, termType.toString(), translation, example, pronunciation);
     }
 
     @Override

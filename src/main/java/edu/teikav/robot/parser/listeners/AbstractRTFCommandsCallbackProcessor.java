@@ -26,6 +26,8 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
 
     private Logger logger = LoggerFactory.getLogger(AbstractRTFCommandsCallbackProcessor.class);
 
+    private static final String ENTERED_GROUP = "Group Entered";
+
     private static final String START_OF_BOOKMARK_COMMAND = "bkmkstart";
     private static final String END_OF_BOOKMARK_COMMAND = "bkmkend";
     private static final String COLOR_TABLE_COMMAND = "colortbl";
@@ -45,11 +47,6 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
     private static final String INFO_COMMAND = "info";
     private static final String SHAPE_COMMAND = "shp";
     private static final String GENERATOR_COMMAND = "generator";
-
-    private static final String ENTERED_GROUP = "Group Entered";
-
-    // Use delegation to preserve the XML output
-    RtfDumpListener rtfDumpListener;
 
     // One instance of this class will be holding information for each consecutive token
     // extracted from RFT document
@@ -77,6 +74,9 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
     // Flags
     private boolean pictureCharactersComingNext;
     private boolean headerComingNext;
+
+    // Use delegation to preserve the XML output
+    private RtfDumpListener rtfDumpListener;
 
     AbstractRTFCommandsCallbackProcessor(OutputStream outputStream) throws XMLStreamException {
         this.rtfDumpListener = new RtfDumpListener(outputStream);
@@ -110,6 +110,10 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
         rtfDumpListener.processBinaryBytes(data);
     }
 
+    // ********************************
+    // End of simple Delegation Calls
+    // ********************************
+
     @Override
     public void processGroupStart() {
         rtfDumpListener.processGroupStart();
@@ -124,11 +128,6 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
             checkIfStillInScope(nestedGroupCommandsQueue.size());
         }
     }
-
-    // ********************************
-    // End of simple Delegation Calls
-    // Used only to output the XML file
-    // ********************************
 
     @Override
     public void processCommand(Command command, int parameter, boolean hasParameter, boolean optional)
@@ -222,6 +221,8 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
 
     @Override
     public void processString(String token) {
+
+        rtfDumpListener.processString(token);
 
         if (token == null) {
             logger.warn("Null token string. Ignoring it");

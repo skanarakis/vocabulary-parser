@@ -61,10 +61,6 @@ public class VocabularySemanticsTokenizer extends AbstractRTFCommandsCallbackPro
     @Override
     public void processToken(String tokenString)
     {
-
-        // Delegate for XML output
-        rtfDumpListener.processString(tokenString);
-
         // The very first invocation of processString method will lead to
         // initialization of the necessary Grammar context. Without it, we
         // cannot complete our work. So, initialize will throw an exception

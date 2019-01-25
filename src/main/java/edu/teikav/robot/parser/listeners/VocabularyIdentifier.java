@@ -39,9 +39,6 @@ public class VocabularyIdentifier extends AbstractRTFCommandsCallbackProcessor {
     @Override
     public void processToken(String tokenString) {
 
-        // Delegate for XML output
-        rtfDumpListener.processString(tokenString);
-
         // In this first pass we only care for matching a grammar in the Registry
         // So, for every token that is being parsed, we add it in our internal list of tokens
         // and then re-calculate their combined hash-code.
