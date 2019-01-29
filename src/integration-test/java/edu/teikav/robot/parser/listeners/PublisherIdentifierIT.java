@@ -42,7 +42,7 @@ import edu.teikav.robot.parser.services.YAMLBasedPublisherGrammarRegistryImpl;
 
 @RunWith(SpringRunner.class)
 @Category(IntegrationTest.class)
-public class VocabularyIdentifierIT {
+public class PublisherIdentifierIT {
 
     @MockBean
     private PublisherGrammarRegistry grammarRegistry;
@@ -69,7 +69,7 @@ public class VocabularyIdentifierIT {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
-        IRtfListener firstPassListener = new VocabularyIdentifier(grammarRegistry, outputStream);
+        IRtfListener firstPassListener = new PublisherIdentifier(grammarRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
         Mockito.verify(grammarRegistry, Mockito.times(5)).findGrammar(any(Integer.class));
@@ -92,7 +92,7 @@ public class VocabularyIdentifierIT {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
-        IRtfListener firstPassListener = new VocabularyIdentifier(spiedRegistry, outputStream);
+        IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
         Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
@@ -114,7 +114,7 @@ public class VocabularyIdentifierIT {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
-        IRtfListener firstPassListener = new VocabularyIdentifier(spiedRegistry, outputStream);
+        IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
         Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
@@ -135,7 +135,7 @@ public class VocabularyIdentifierIT {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
-        IRtfListener firstPassListener = new VocabularyIdentifier(spiedRegistry, outputStream);
+        IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
         Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
@@ -157,7 +157,7 @@ public class VocabularyIdentifierIT {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-02.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
-        IRtfListener firstPassListener = new VocabularyIdentifier(spiedRegistry, outputStream);
+        IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
         Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
@@ -178,7 +178,7 @@ public class VocabularyIdentifierIT {
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "OurW-2b.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
-        IRtfListener firstPassListener = new VocabularyIdentifier(spiedRegistry, outputStream);
+        IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
         Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
@@ -194,7 +194,7 @@ public class VocabularyIdentifierIT {
     }
 
     @TestConfiguration
-    static class VocabularyIdentifierTestConfiguration {
+    static class PublisherIdentifierTestConfiguration {
 
         @Bean
         OutputStream firstPassOutputStream() throws IOException {

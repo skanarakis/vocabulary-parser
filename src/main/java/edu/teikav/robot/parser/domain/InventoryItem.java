@@ -9,6 +9,8 @@ public class InventoryItem {
     private String translation;
     private String example;
     private String pronunciation;
+    private String derivative;
+    private String verbParticiples;
 
     public InventoryItem(String term) {
         this.term = term;
@@ -50,6 +52,22 @@ public class InventoryItem {
         this.pronunciation = pronunciation;
     }
 
+    public String getDerivative() {
+        return derivative;
+    }
+
+    public void setDerivative(String derivative) {
+        this.derivative = derivative;
+    }
+
+    public String getVerbParticiples() {
+        return verbParticiples;
+    }
+
+    public void setVerbParticiples(String verbParticiples) {
+        this.verbParticiples = verbParticiples;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -59,13 +77,16 @@ public class InventoryItem {
                 termType == that.termType &&
                 Objects.equals(translation, that.translation) &&
                 Objects.equals(example, that.example) &&
-                Objects.equals(pronunciation, that.pronunciation);
+                Objects.equals(pronunciation, that.pronunciation) &&
+                Objects.equals(derivative, that.derivative) &&
+                Objects.equals(verbParticiples, that.verbParticiples);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(term, termType.toString(), translation, example, pronunciation);
+        return Objects.hash(term, termType.toString(), translation, example,
+                pronunciation, derivative, verbParticiples);
     }
 
     @Override
@@ -79,6 +100,12 @@ public class InventoryItem {
         sb.append(", translation='").append(translation).append('\'');
         if (example != null && example.length() > 0) {
             sb.append(", example='").append(example).append('\'');
+        }
+        if (derivative != null && derivative.length() > 0) {
+            sb.append(", derivative='").append(derivative).append('\'');
+        }
+        if (verbParticiples != null && verbParticiples.length() > 0) {
+            sb.append(", verbParticiples='").append(verbParticiples).append('\'');
         }
         sb.append('}');
         return sb.toString();

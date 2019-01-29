@@ -19,7 +19,7 @@ import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
 
 @Component
 @Qualifier("FirstPassParser")
-public class VocabularyIdentifier extends AbstractRTFCommandsCallbackProcessor {
+public class PublisherIdentifier extends AbstractRTFCommandsCallbackProcessor {
 
     private Logger logger = LoggerFactory.getLogger(AbstractRTFCommandsCallbackProcessor.class);
 
@@ -28,8 +28,8 @@ public class VocabularyIdentifier extends AbstractRTFCommandsCallbackProcessor {
     private PublisherGrammarRegistry registry;
     private List<VocabularyToken> tokens;
 
-    VocabularyIdentifier(PublisherGrammarRegistry registry,
-                                @Qualifier("FirstPassOutputStream") OutputStream outputStream)
+    PublisherIdentifier(PublisherGrammarRegistry registry,
+                        @Qualifier("FirstPassOutputStream") OutputStream outputStream)
             throws XMLStreamException {
         super(outputStream);
         this.registry = registry;

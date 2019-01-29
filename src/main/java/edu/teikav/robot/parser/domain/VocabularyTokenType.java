@@ -9,6 +9,8 @@ public enum VocabularyTokenType {
     TRANSLATION,
     EXAMPLE,
     SYNONYMS,
-    ANTONYMS
+    OPPOSITES,
+    DERIVATIVES,
+    VERB_PARTICIPLES;
 
 }

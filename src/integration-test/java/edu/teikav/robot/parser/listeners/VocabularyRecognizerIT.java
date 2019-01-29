@@ -15,6 +15,7 @@ import javax.xml.stream.XMLStreamException;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -45,9 +46,10 @@ import edu.teikav.robot.parser.services.YAMLBasedPublisherGrammarRegistryImpl;
 
 @RunWith(SpringRunner.class)
 @Category(IntegrationTest.class)
-public class VocabularySemanticsTokenizerIT {
+@Ignore
+public class VocabularyRecognizerIT {
 
-    private Logger logger = LoggerFactory.getLogger(VocabularySemanticsTokenizerIT.class);
+    private Logger logger = LoggerFactory.getLogger(VocabularyRecognizerIT.class);
 
     private static PublisherGrammarRegistry registry;
 
@@ -65,7 +67,7 @@ public class VocabularySemanticsTokenizerIT {
     public static void preloadRegistry() {
 
         registry = new YAMLBasedPublisherGrammarRegistryImpl(new Yaml(new Constructor(PublisherGrammar.class)));
-        InputStream publishersInputStream = VocabularySemanticsTokenizerIT.class
+        InputStream publishersInputStream = VocabularyRecognizerIT.class
                 .getClassLoader()
                 .getResourceAsStream("publishers/all-publishers.yaml");
         registry.loadMultipleGrammars(publishersInputStream);
@@ -84,7 +86,7 @@ public class VocabularySemanticsTokenizerIT {
         IRtfParser parser = new StandardRtfParser();
 
         // Make the first pass
-        IRtfListener vocabularyIdentifier = new VocabularyIdentifier(registry, firstPassOutputStream);
+        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
         parser.parse(source, vocabularyIdentifier);
 
         // Need to reset input stream
@@ -93,7 +95,7 @@ public class VocabularySemanticsTokenizerIT {
         source = new RtfStreamSource(inputStream);
 
         // Make the second pass
-        IRtfListener vocabularySemanticsTokenizer = new VocabularySemanticsTokenizer(registry,
+        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
                 inventoryService, secondPassOutputStream);
         parser.parse(source, vocabularySemanticsTokenizer);
 
@@ -116,7 +118,7 @@ public class VocabularySemanticsTokenizerIT {
         IRtfParser parser = new StandardRtfParser();
 
         // Make the first pass
-        IRtfListener vocabularyIdentifier = new VocabularyIdentifier(registry, firstPassOutputStream);
+        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
         parser.parse(source, vocabularyIdentifier);
 
         // Need to reset input stream
@@ -125,7 +127,7 @@ public class VocabularySemanticsTokenizerIT {
         source = new RtfStreamSource(inputStream);
 
         // Make the second pass
-        IRtfListener vocabularySemanticsTokenizer = new VocabularySemanticsTokenizer(registry,
+        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
                 inventoryService, secondPassOutputStream);
         parser.parse(source, vocabularySemanticsTokenizer);
 
@@ -145,7 +147,7 @@ public class VocabularySemanticsTokenizerIT {
         IRtfParser parser = new StandardRtfParser();
 
         // Make the first pass
-        IRtfListener vocabularyIdentifier = new VocabularyIdentifier(registry, firstPassOutputStream);
+        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
         parser.parse(source, vocabularyIdentifier);
 
         // Need to reset input stream
@@ -154,7 +156,7 @@ public class VocabularySemanticsTokenizerIT {
         source = new RtfStreamSource(inputStream);
 
         // Make the second pass
-        IRtfListener vocabularySemanticsTokenizer = new VocabularySemanticsTokenizer(registry,
+        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
                 inventoryService, secondPassOutputStream);
         parser.parse(source, vocabularySemanticsTokenizer);
 
@@ -169,7 +171,7 @@ public class VocabularySemanticsTokenizerIT {
     }
 
     @TestConfiguration
-    static class VocabularyIdentifierTestConfiguration {
+    static class VocabularyRecognizerTestConfiguration {
 
         @Bean
         @Qualifier("FirstPassOutputStream")
