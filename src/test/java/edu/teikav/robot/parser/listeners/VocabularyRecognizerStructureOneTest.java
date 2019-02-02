@@ -27,7 +27,7 @@ import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
 @RunWith(MockitoJUnitRunner.class)
 public class VocabularyRecognizerStructureOneTest {
 
-    private VocabularyRecognizer tokenizer;
+    private VocabularyRecognizer recognizer;
 
     private static PublisherGrammarRegistry registry;
 
@@ -50,6 +50,11 @@ public class VocabularyRecognizerStructureOneTest {
         Mockito.when(context.isPartPotentiallyLast("GRAMMAR_TYPE")).thenReturn(false);
         Mockito.when(context.isPartPotentiallyLast("TRANSLATION")).thenReturn(false);
         Mockito.when(context.isPartPotentiallyLast("EXAMPLE")).thenReturn(true);
+
+        Mockito.when(context.isPartPotentiallySplit("TERM")).thenReturn(false);
+        Mockito.when(context.isPartPotentiallySplit("GRAMMAR_TYPE")).thenReturn(false);
+        Mockito.when(context.isPartPotentiallySplit("TRANSLATION")).thenReturn(false);
+        Mockito.when(context.isPartPotentiallySplit("EXAMPLE")).thenReturn(false);
 
         Mockito.when(context.isPartPotentiallyComposite("GRAMMAR_TYPE")).thenReturn(true);
         Mockito.when(context.isPartPotentiallyComposite("TRANSLATION")).thenReturn(false);
@@ -80,7 +85,7 @@ public class VocabularyRecognizerStructureOneTest {
 
     @Before
     public void setup() throws XMLStreamException {
-        tokenizer = new VocabularyRecognizer(registry, inventoryService, outputStream);
+        recognizer = new VocabularyRecognizer(registry, inventoryService, outputStream);
     }
 
     @Test
@@ -93,7 +98,7 @@ public class VocabularyRecognizerStructureOneTest {
 
         List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample);
 
-        tokens.forEach(tokenizer::processToken);
+        tokens.forEach(recognizer::processToken);
 
         InventoryItem item = new InventoryItem(term);
         item.setTermType(TermGrammarTypes.NOUN);
@@ -116,7 +121,7 @@ public class VocabularyRecognizerStructureOneTest {
 
         List<String> tokens = Arrays.asList(term, compositePart, termTranslation, termExample);
 
-        tokens.forEach(tokenizer::processToken);
+        tokens.forEach(recognizer::processToken);
 
         InventoryItem item = new InventoryItem(term);
         item.setTermType(TermGrammarTypes.VERB);
@@ -143,7 +148,7 @@ public class VocabularyRecognizerStructureOneTest {
         List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample,
                 term2, verb, term2Translation, term2Example);
 
-        tokens.forEach(tokenizer::processToken);
+        tokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(2))
                 .saveNewInventoryItem(any(InventoryItem.class));
@@ -164,7 +169,7 @@ public class VocabularyRecognizerStructureOneTest {
         List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample,
                 term2, term2Translation, term2Example);
 
-        tokens.forEach(tokenizer::processToken);
+        tokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(2))
                 .saveNewInventoryItem(any(InventoryItem.class));
@@ -197,7 +202,7 @@ public class VocabularyRecognizerStructureOneTest {
                 term3, verb, term3Translation, term3Example,
                 term4, adjective, term4Translation, term4Example);
 
-        tokens.forEach(tokenizer::processToken);
+        tokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(4))
                 .saveNewInventoryItem(any(InventoryItem.class));

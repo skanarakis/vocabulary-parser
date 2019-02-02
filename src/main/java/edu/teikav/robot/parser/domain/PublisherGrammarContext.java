@@ -94,8 +94,12 @@ public class PublisherGrammarContext {
         return null;
     }
 
-    public String getCompositePartSplitToken(String activeVocabularyPart) {
+    public String getCompositePartSplitToken(String type) {
         return null;
+    }
+
+    public boolean isPartPotentiallySplit(String type) {
+        return false;
     }
 
     // helper methods to allow clients check their next token according to grammar rules

@@ -26,7 +26,7 @@ import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
 @RunWith(MockitoJUnitRunner.class)
 public class VocabularyRecognizerStructureTwoTest {
 
-    private VocabularyRecognizer tokenizer;
+    private VocabularyRecognizer recognizer;
 
     private static PublisherGrammarRegistry registry;
 
@@ -50,6 +50,12 @@ public class VocabularyRecognizerStructureTwoTest {
         Mockito.when(context.isPartPotentiallyLast("TRANSLATION")).thenReturn(false);
         Mockito.when(context.isPartPotentiallyLast("EXAMPLE")).thenReturn(true);
         Mockito.when(context.isPartPotentiallyLast("DERIVATIVES")).thenReturn(true);
+
+        Mockito.when(context.isPartPotentiallySplit("TERM")).thenReturn(true);
+        Mockito.when(context.isPartPotentiallySplit("GRAMMAR_TYPE")).thenReturn(false);
+        Mockito.when(context.isPartPotentiallySplit("TRANSLATION")).thenReturn(false);
+        Mockito.when(context.isPartPotentiallySplit("EXAMPLE")).thenReturn(false);
+        Mockito.when(context.isPartPotentiallySplit("DERIVATIVES")).thenReturn(false);
 
         Mockito.when(context.isPartPotentiallyComposite("GRAMMAR_TYPE")).thenReturn(true);
         Mockito.when(context.isPartPotentiallyComposite("TRANSLATION")).thenReturn(false);
@@ -86,7 +92,7 @@ public class VocabularyRecognizerStructureTwoTest {
 
     @Before
     public void setup() throws XMLStreamException {
-        tokenizer = new VocabularyRecognizer(registry, inventoryService, outputStream);
+        recognizer = new VocabularyRecognizer(registry, inventoryService, outputStream);
     }
 
     @Test
@@ -100,7 +106,7 @@ public class VocabularyRecognizerStructureTwoTest {
 
         List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample, termDerivative);
 
-        tokens.forEach(tokenizer::processToken);
+        tokens.forEach(recognizer::processToken);
 
         InventoryItem item = new InventoryItem(term);
         item.setTermType(TermGrammarTypes.NOUN);
@@ -142,14 +148,14 @@ public class VocabularyRecognizerStructureTwoTest {
                 term3, verb, term3Translation, term3Example,
                 term4, adjective, term4Translation, term4Example, term4Derivation);
 
-        tokens.forEach(tokenizer::processToken);
+        tokens.forEach(recognizer::processToken);
         // 4 vocabulary items, 6 actual saves
         Mockito.verify(inventoryService, Mockito.times(6))
                 .saveNewInventoryItem(any(InventoryItem.class));
     }
 
     @Test
-    public void acceptStreamOfTermsWithMixedRules() {
+    public void acceptStreamOfTermsWithMixedRules_TestA() {
 
         List<String> streamOfTokens = Arrays.asList(
                 "configure", "(v)", "ρυθμίζω", "System was properly configured",
@@ -165,9 +171,24 @@ public class VocabularyRecognizerStructureTwoTest {
                 "come over", "(phr v)", "επισκέπτομαι, περνάω να δω κάποιον", "My brother came over to my house"
         );
 
-        streamOfTokens.forEach(tokenizer::processToken);
+        streamOfTokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(13))
+                .saveNewInventoryItem(any(InventoryItem.class));
+    }
+
+    @Test
+    public void acceptStreamOfTermsWithMixedRules_TestB() {
+
+        List<String> streamOfTokens = Arrays.asList(
+                "termA", "(v)", "πρώτος όρος", "Term A Example",
+                "termB", "(n)", "δεύτερος όρος", "Term B Example", "Der: derivative (v)",
+                "(some)", "termC", "(adj)", "τρίτος όρος", "Term C Example"
+        );
+
+        streamOfTokens.forEach(recognizer::processToken);
+
+        Mockito.verify(inventoryService, Mockito.times(4))
                 .saveNewInventoryItem(any(InventoryItem.class));
     }
 

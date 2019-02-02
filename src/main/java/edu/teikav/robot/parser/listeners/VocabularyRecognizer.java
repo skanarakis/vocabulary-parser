@@ -22,6 +22,9 @@ import edu.teikav.robot.parser.domain.PublisherGrammarContext;
 import edu.teikav.robot.parser.domain.TermGrammarTypes;
 import edu.teikav.robot.parser.domain.VocabularyToken;
 import edu.teikav.robot.parser.domain.VocabularyTokenType;
+import edu.teikav.robot.parser.exceptions.InvalidGrammarGraphException;
+import edu.teikav.robot.parser.exceptions.NoMatchingVertexException;
+import edu.teikav.robot.parser.exceptions.RecognizerProcessingException;
 import edu.teikav.robot.parser.exceptions.UnknownGrammarException;
 import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
@@ -31,8 +34,9 @@ import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
 public class VocabularyRecognizer extends AbstractRTFCommandsCallbackProcessor {
 
     private Logger logger = LoggerFactory.getLogger(VocabularyRecognizer.class);
+    private static final String NEW_INVENTORY_ITEM_DEBUG_MESSAGE = "New InventoryItem object with value {}";
+    private static final String SPACE = " ";
 
-    // Utilize policy rules of active grammar
     private PublisherGrammarRegistry registry;
     private PublisherGrammarContext grammarContext;
 
@@ -40,9 +44,12 @@ public class VocabularyRecognizer extends AbstractRTFCommandsCallbackProcessor {
 
     private DefaultDirectedGraph<String, DefaultEdge> graph;
     private String activeVocabularyPart;
+    private String previousVocabularyPart;
     private InventoryItem currentItem;
 
     private boolean isFirstStreamedToken = true;
+
+    private StringBuilder cachedPart = new StringBuilder();
 
     @FunctionalInterface
     private interface ItemUpdateSnippet {
@@ -71,6 +78,7 @@ public class VocabularyRecognizer extends AbstractRTFCommandsCallbackProcessor {
 
         super(outputStream);
 
+        activeVocabularyPart = "TERM";
         currentToken = new VocabularyToken();
         this.inventoryService = inventoryService;
         this.registry = registry;
@@ -83,39 +91,27 @@ public class VocabularyRecognizer extends AbstractRTFCommandsCallbackProcessor {
     }
 
     @Override
-    public void processToken(String tokenString)
+    public void processToken(String tokenStringValue)
     {
-        logger.debug("----\tProcessing token {}", tokenString);
+        logger.debug("----\tProcessing token {} - Active Vocabulary part : {}", tokenStringValue, activeVocabularyPart);
 
-        // The very first invocation of processString method will lead to
-        // the construction of the recognition environment.
-        // This will be done by the help of the necessary Grammar context.
-        // Without it,vocabulary recognizer cannot complete its task.
-        // In case no active grammar exists in the Publisher Grammar Registry
-        // we throw an exception
         if (this.grammarContext == null) {
             createRecognitionEnvironment();
         }
-
         if (isFirstStreamedToken) {
-            handleFirstStreamedToken(tokenString);
-        } else {
-            activeVocabularyPart = findNextVertexInVocabularyPartsGraph(tokenString);
+            handleFirstStreamedToken(tokenStringValue);
+            return;
         }
-
-        processVocabularyPart(tokenString);
-
-        if (grammarContext.isPartPotentiallyLast(activeVocabularyPart)) {
-            inventoryService.saveNewInventoryItem(currentItem);
-            logger.info("Inventory saving for {}", currentItem);
-        }
+        doProcessToken(tokenStringValue);
     }
 
     private void createRecognitionEnvironment() {
+        // Recognizer depends on an active Publisher Registry grammar for its job
+        // In case no active grammar exists in the Publisher Grammar Registry, we fail
         Optional<PublisherGrammarContext> grammarContextOptional = this.registry.getActiveGrammarContext();
         grammarContext = grammarContextOptional.orElseThrow(UnknownGrammarException::new);
         List<String> vocabularyParts = grammarContext.vocabularyOrdering();
-        logger.info("Active Grammar has the following Vocabulary Terms Structure: \n\t{}", vocabularyParts);
+        logger.trace("Active Grammar has the following Vocabulary Terms Structure: \n\t{}", vocabularyParts);
 
         constructGraph(vocabularyParts);
         markRootVertex();
@@ -141,60 +137,117 @@ public class VocabularyRecognizer extends AbstractRTFCommandsCallbackProcessor {
         if (optionalTermVertex.isPresent()){
             activeVocabularyPart = optionalTermVertex.get();
         } else {
-            throw new RuntimeException("GRAPH must have a TERM vertex");
+            throw new InvalidGrammarGraphException("Grammar Graph must have a TERM vertex");
         }
     }
 
-    private void handleFirstStreamedToken(String tokenString) {
+    private void handleFirstStreamedToken(String tokenStringValue) {
+        if (grammarContext.isPartPotentiallySplit("TERM")) {
+            logger.debug("Caching TERM segment {}", tokenStringValue);
+            cachedPart.append(SPACE).append(tokenStringValue);
+        } else {
+            currentItem = new InventoryItem(tokenStringValue);
+            logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, tokenStringValue);
+        }
         isFirstStreamedToken = false;
-        activeVocabularyPart = "TERM";
-        logger.debug("Encountered 'TERM' vertex ... new vocabulary item");
-        currentItem = new InventoryItem(tokenString);
     }
 
-    private String findNextVertexInVocabularyPartsGraph(String tokenString) {
-        Set<DefaultEdge> edges = graph.outgoingEdgesOf(activeVocabularyPart);
+    private void doProcessToken(String tokenStringValue) {
+        previousVocabularyPart = activeVocabularyPart;
+        activeVocabularyPart = findNextVertexInVocabularyPartsGraph(tokenStringValue);
+        if (previousVocabularyPart.equals(activeVocabularyPart)) {
+            handleReEntrantVertexTransition(tokenStringValue);
+        } else {
+            handleNormalVertexTransition(tokenStringValue);
+        }
+        checkForPotentiallyLastPart();
+    }
 
+    private void handleReEntrantVertexTransition(String tokenStringValue) {
+        if (grammarContext.isPartPotentiallySplit(activeVocabularyPart)) {
+            cachedPart.append(SPACE).append(tokenStringValue);
+            logger.debug("{} is split. Caching current segment {}. Complete cache is '{}'",
+                    activeVocabularyPart, tokenStringValue, cachedPart.toString());
+        } else {
+            throw new NoMatchingVertexException("No matching vertex found and active vertex cannot hold partial segments");
+        }
+    }
+
+    private void handleNormalVertexTransition(String tokenStringValue) {
+        if (!cachedPart.toString().isEmpty()) {
+            handleCachedData();
+        }
+        if (grammarContext.isPartPotentiallySplit(activeVocabularyPart)) {
+            cachedPart.append(SPACE).append(tokenStringValue);
+            logger.debug("{} might be split. Caching current segment {}. Complete cache is '{}'",
+                    activeVocabularyPart, tokenStringValue, cachedPart.toString());
+        } else {
+            processVocabularyPart(tokenStringValue);
+        }
+    }
+
+    private String findNextVertexInVocabularyPartsGraph(String tokenStringValue) {
+        Set<DefaultEdge> edges = graph.outgoingEdgesOf(activeVocabularyPart);
         for (DefaultEdge edge : edges) {
             if (edges.size() == 1) {
                 String newVertex = graph.getEdgeTarget(edge);
-                logger.debug("New VERTEX is {}", newVertex);
+                logger.debug("New Vertex is {}", newVertex);
                 return newVertex;
             }
             String relatedVertex = graph.getEdgeTarget(edge);
             Pattern pattern = Pattern.compile(grammarContext.patternOfToken(relatedVertex));
-            if (pattern.matcher(tokenString).matches()) {
-                logger.debug("Matched pattern {} for token {} (:{}). New Vertex is {}", grammarContext.patternOfToken(relatedVertex), tokenString,
-                        relatedVertex, relatedVertex);
+            if (pattern.matcher(tokenStringValue).matches()) {
+                logger.debug("Matched pattern {} for token {} (:{}). New Vertex is {}",
+                        grammarContext.patternOfToken(relatedVertex), tokenStringValue, relatedVertex, relatedVertex);
                 return relatedVertex;
             } else {
-                logger.debug("No match for pattern {} for token {} (:{})", grammarContext.patternOfToken(relatedVertex), tokenString,
+                logger.debug("No match for pattern {} for token {} (:{})", grammarContext.patternOfToken(relatedVertex), tokenStringValue,
                         relatedVertex);
             }
         }
-        return "";
+        logger.debug("No new Vertex. Keep the same {}", activeVocabularyPart);
+        return activeVocabularyPart;
     }
 
-    private void processVocabularyPart(String tokenString) {
+    private void processVocabularyPart(String tokenStringValue) {
+        logger.debug("*** Entered PROCESS with activeVocabularyPart: {}, previousVocabularyPart: {}, cache: '{}'",
+                activeVocabularyPart, previousVocabularyPart, cachedPart.toString());
+
         currentToken.setTokenType(VocabularyTokenType.valueOf(activeVocabularyPart));
 
         if (activeVocabularyPart.equals("TERM")) {
-            currentItem = new InventoryItem(tokenString);
+            currentItem = new InventoryItem(tokenStringValue);
+            logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, tokenStringValue);
         } else {
             ItemUpdateSnippet snippet = itemUpdateSnippets.get(activeVocabularyPart);
             if (grammarContext.isPartPotentiallyComposite(activeVocabularyPart)) {
                 String compositePartSplitToken = grammarContext.getCompositePartSplitToken(activeVocabularyPart);
-                String[] partsOfComposite = tokenString.split(compositePartSplitToken);
+                String[] partsOfComposite = tokenStringValue.split(compositePartSplitToken);
                 if (partsOfComposite.length == 1) {
                     // Not composite
-                    snippet.updateItem(grammarContext, currentItem, tokenString);
+                    snippet.updateItem(grammarContext, currentItem, tokenStringValue);
                 } else {
                     processCompositeVocabularyPart(partsOfComposite);
                 }
             } else {
-                snippet.updateItem(grammarContext, currentItem, tokenString);
+                snippet.updateItem(grammarContext, currentItem, tokenStringValue);
             }
         }
+        cachedPart.delete(0, cachedPart.length());
+    }
+
+    private void handleCachedData() {
+        String cachedPartString = cachedPart.toString().trim();
+        logger.debug("Time to handle cache {} for ({})", cachedPartString, previousVocabularyPart);
+        if (previousVocabularyPart.equals("TERM")) {
+            currentItem = new InventoryItem(cachedPartString);
+            logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, cachedPartString);
+        } else {
+            ItemUpdateSnippet snippet = itemUpdateSnippets.get(previousVocabularyPart);
+            snippet.updateItem(grammarContext, currentItem, cachedPartString);
+            logger.debug("Updating InventoryItem object with value {}", cachedPartString);
+        }
+        cachedPart.delete(0, cachedPart.length());
     }
 
     private void processCompositeVocabularyPart(String[] compositeParts) {
@@ -202,13 +255,21 @@ public class VocabularyRecognizer extends AbstractRTFCommandsCallbackProcessor {
         List<String> compositePartTypes = grammarContext.getCompositePartsFor(activeVocabularyPart);
 
         if (compositeParts.length != compositePartTypes.size()) {
-            throw new RuntimeException("Segments of a composite vocabulary part must have corresponding split token segments");
+            throw new RecognizerProcessingException("Segments of a composite vocabulary part must have corresponding split token segments");
         }
 
         for (int i = 0; i < compositePartTypes.size(); i++) {
             logger.debug("Iterating for segment {}({})", compositeParts[i], compositePartTypes.get(i));
             ItemUpdateSnippet snippet = itemUpdateSnippets.get(compositePartTypes.get(i));
             snippet.updateItem(grammarContext, currentItem, compositeParts[i]);
+        }
+    }
+
+    private void checkForPotentiallyLastPart() {
+        if (grammarContext.isPartPotentiallyLast(activeVocabularyPart)) {
+
+            inventoryService.saveNewInventoryItem(currentItem);
+            logger.info("Inventory saving for {}", currentItem);
         }
     }
 }
