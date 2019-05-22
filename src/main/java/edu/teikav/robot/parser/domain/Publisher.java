@@ -1,5 +1,7 @@
 package edu.teikav.robot.parser.domain;
 
+import org.springframework.util.StringUtils;
+
 import java.util.Objects;
 
 public class Publisher {
@@ -10,7 +12,14 @@ public class Publisher {
 
     public Publisher() {}
 
+    public Publisher(Publisher publisher) {
+        this(publisher.getName(), publisher.getDescription(), publisher.getPublicationYear());
+    }
+
     public Publisher(String name, String description, String publicationYear) {
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("Publisher name cannot be empty");
+        }
         this.name = name;
         this.description = description;
         this.publicationYear = publicationYear;
@@ -52,7 +61,6 @@ public class Publisher {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(name, description, publicationYear);
     }
 }

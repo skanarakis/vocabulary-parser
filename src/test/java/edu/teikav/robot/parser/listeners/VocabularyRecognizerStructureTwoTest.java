@@ -1,14 +1,10 @@
 package edu.teikav.robot.parser.listeners;
 
-import static org.mockito.ArgumentMatchers.any;
-
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import javax.xml.stream.XMLStreamException;
-
+import edu.teikav.robot.parser.domain.InventoryItem;
+import edu.teikav.robot.parser.domain.PublisherSpecification;
+import edu.teikav.robot.parser.domain.SpeechPart;
+import edu.teikav.robot.parser.services.InventoryService;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -17,18 +13,21 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import edu.teikav.robot.parser.domain.InventoryItem;
-import edu.teikav.robot.parser.domain.PublisherGrammarContext;
-import edu.teikav.robot.parser.domain.TermGrammarTypes;
-import edu.teikav.robot.parser.services.InventoryService;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
+import javax.xml.stream.XMLStreamException;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @RunWith(MockitoJUnitRunner.class)
 public class VocabularyRecognizerStructureTwoTest {
 
     private VocabularyRecognizer recognizer;
 
-    private static PublisherGrammarRegistry registry;
+    private static PublisherSpecificationRegistry registry;
 
     @Mock
     private InventoryService inventoryService;
@@ -38,56 +37,58 @@ public class VocabularyRecognizerStructureTwoTest {
 
     @BeforeClass
     public static void init() {
-        registry = Mockito.mock(PublisherGrammarRegistry.class);
-        PublisherGrammarContext context = Mockito.mock(PublisherGrammarContext.class);
+        registry = Mockito.mock(PublisherSpecificationRegistry.class);
+        PublisherSpecification spec = Mockito.mock(PublisherSpecification.class);
 
-        Mockito.when(context.vocabularyOrdering()).thenReturn(
-                Arrays.asList("TERM", "GRAMMAR_TYPE", "TRANSLATION", "EXAMPLE", "DERIVATIVES")
-        );
+        // Vocabulary Structure - Graph mock specs
+        Mockito.when(spec.containsRootVocabularyToken("TERM")).thenReturn(true);
+        Mockito.when(registry.getActiveSpec()).thenReturn(Optional.of(spec));
 
-        Mockito.when(context.isPartPotentiallyLast("TERM")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyLast("GRAMMAR_TYPE")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyLast("TRANSLATION")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyLast("EXAMPLE")).thenReturn(true);
-        Mockito.when(context.isPartPotentiallyLast("DERIVATIVES")).thenReturn(true);
+        Mockito.when(spec.getValidTransitionsFor("TERM"))
+                .thenReturn(Arrays.asList("GRAMMAR_TYPE", "TRANSLATION"));
+        Mockito.when(spec.getValidTransitionsFor("GRAMMAR_TYPE"))
+                .thenReturn(Collections.singletonList("TRANSLATION"));
+        Mockito.when(spec.getValidTransitionsFor("TRANSLATION"))
+                .thenReturn(Collections.singletonList("EXAMPLE"));
+        Mockito.when(spec.getValidTransitionsFor("EXAMPLE"))
+                .thenReturn(Arrays.asList("DERIVATIVES", "TERM"));
+        Mockito.when(spec.getValidTransitionsFor("DERIVATIVES"))
+                .thenReturn(Collections.singletonList("TERM"));
 
-        Mockito.when(context.isPartPotentiallySplit("TERM")).thenReturn(true);
-        Mockito.when(context.isPartPotentiallySplit("GRAMMAR_TYPE")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallySplit("TRANSLATION")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallySplit("EXAMPLE")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallySplit("DERIVATIVES")).thenReturn(false);
+        // Vocabulary Structure - Token Types mock specs
+        Mockito.when(spec.isTermPotentiallyLast("TERM")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallySplit("TERM")).thenReturn(true);
+        Mockito.when(spec.getTermPattern("TERM")).thenReturn("[a-zA-Z\\s\\(\\)]+");
 
-        Mockito.when(context.isPartPotentiallyComposite("GRAMMAR_TYPE")).thenReturn(true);
-        Mockito.when(context.isPartPotentiallyComposite("TRANSLATION")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyComposite("EXAMPLE")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyComposite("DERIVATIVES")).thenReturn(false);
-
-        Mockito.when(context.getCompositePartsFor("GRAMMAR_TYPE"))
+        Mockito.when(spec.isTermPotentiallyLast("GRAMMAR_TYPE")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallySplit("GRAMMAR_TYPE")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallyComposite("GRAMMAR_TYPE")).thenReturn(true);
+        Mockito.when(spec.getTermPattern("GRAMMAR_TYPE"))
+                .thenReturn("(^\\(v\\)|^\\(n\\)|^\\(phr v\\)|^\\(adj\\)).*");
+        Mockito.when(spec.getCompositePartsFor("GRAMMAR_TYPE"))
                 .thenReturn(Arrays.asList("GRAMMAR_TYPE", "VERB_PARTICIPLES"));
-        Mockito.when(context.getCompositePartSplitToken("GRAMMAR_TYPE"))
+        Mockito.when(spec.getCompositePartSplitToken("GRAMMAR_TYPE"))
                 .thenReturn("\\s\\(");
 
-        Mockito.when(context.patternOfToken("TERM")).thenReturn("[a-zA-Z\\s\\(\\)]+");
-        Mockito.when(context.patternOfToken("GRAMMAR_TYPE")).thenReturn("(^\\(v\\)|^\\(n\\)|^\\(phr v\\)|^\\(adj\\)).*");
-        Mockito.when(context.patternOfToken("TRANSLATION")).thenReturn("[\\s\\p{InGreek}]+");
-        Mockito.when(context.patternOfToken("DERIVATIVES")).thenReturn("Der:[\\sa-zA-Z\\(\\)]+");
+        Mockito.when(spec.isTermPotentiallyLast("TRANSLATION")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallySplit("TRANSLATION")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallyComposite("TRANSLATION")).thenReturn(false);
+        Mockito.when(spec.getTermPattern("TRANSLATION")).thenReturn("[\\s\\p{InGreek}]+");
 
-        Mockito.when(context.getStructureRelations()).thenReturn(
-                Arrays.asList("TERM -> GRAMMAR_TYPE",
-                        "TERM -> TRANSLATION",
-                        "GRAMMAR_TYPE -> TRANSLATION",
-                        "TRANSLATION -> EXAMPLE",
-                        "EXAMPLE -> DERIVATIVES",
-                        "EXAMPLE -> TERM",
-                        "DERIVATIVES -> TERM")
-        );
+        Mockito.when(spec.isTermPotentiallyLast("EXAMPLE")).thenReturn(true);
+        Mockito.when(spec.isTermPotentiallySplit("EXAMPLE")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallyComposite("EXAMPLE")).thenReturn(false);
 
-        Mockito.when(context.getGrammarTypeFor("(n)")).thenReturn(Optional.of(TermGrammarTypes.NOUN));
-        Mockito.when(context.getGrammarTypeFor("(v)")).thenReturn(Optional.of(TermGrammarTypes.VERB));
-        Mockito.when(context.getGrammarTypeFor("(adj)")).thenReturn(Optional.of(TermGrammarTypes.ADJECTIVE));
-        Mockito.when(context.getGrammarTypeFor("(phr v)")).thenReturn(Optional.of(TermGrammarTypes.PHRASAL_VERB));
+        Mockito.when(spec.isTermPotentiallyLast("DERIVATIVES")).thenReturn(true);
+        Mockito.when(spec.isTermPotentiallySplit("DERIVATIVES")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallyComposite("DERIVATIVES")).thenReturn(false);
+        Mockito.when(spec.getTermPattern("DERIVATIVES")).thenReturn("Der:[\\sa-zA-Z\\(\\)]+");
 
-        Mockito.when(registry.getActiveGrammarContext()).thenReturn(Optional.of(context));
+        // Speech Parts mock specs
+        Mockito.when(spec.getSpeechPartFor("(n)")).thenReturn(Optional.of(SpeechPart.NOUN));
+        Mockito.when(spec.getSpeechPartFor("(v)")).thenReturn(Optional.of(SpeechPart.VERB));
+        Mockito.when(spec.getSpeechPartFor("(adj)")).thenReturn(Optional.of(SpeechPart.ADJECTIVE));
+        Mockito.when(spec.getSpeechPartFor("(phr v)")).thenReturn(Optional.of(SpeechPart.PHRASAL_VERB));
     }
 
     @Before
@@ -109,14 +110,14 @@ public class VocabularyRecognizerStructureTwoTest {
         tokens.forEach(recognizer::processToken);
 
         InventoryItem item = new InventoryItem(term);
-        item.setTermType(TermGrammarTypes.NOUN);
+        item.setTermType(SpeechPart.NOUN);
         item.setTranslation(termTranslation);
         item.setExample(termExample);
         item.setDerivative(termDerivative);
         // One inventory item to save, but it will save it twice ... we cannot know term's delineation
         // if last term's part can be optional. So we have to save the term in every potential last part
         Mockito.verify(inventoryService, Mockito.times(2))
-                .saveNewInventoryItem(item);
+                .save(item);
     }
 
     @Test
@@ -151,7 +152,7 @@ public class VocabularyRecognizerStructureTwoTest {
         tokens.forEach(recognizer::processToken);
         // 4 vocabulary items, 6 actual saves
         Mockito.verify(inventoryService, Mockito.times(6))
-                .saveNewInventoryItem(any(InventoryItem.class));
+                .save(any(InventoryItem.class));
     }
 
     @Test
@@ -174,7 +175,7 @@ public class VocabularyRecognizerStructureTwoTest {
         streamOfTokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(13))
-                .saveNewInventoryItem(any(InventoryItem.class));
+                .save(any(InventoryItem.class));
     }
 
     @Test
@@ -189,7 +190,7 @@ public class VocabularyRecognizerStructureTwoTest {
         streamOfTokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(4))
-                .saveNewInventoryItem(any(InventoryItem.class));
+                .save(any(InventoryItem.class));
     }
 
 

@@ -2,45 +2,77 @@ publisher:
   name: Publisher A
   description: PubA Description
   publicationYear: 2018
-vocabularyTokensOrdering: TERM GRAMMAR_TYPE TRANSLATION EXAMPLE
-vocabularyTokenSpecs:
-- tokenType: TERM
-  textPoints: 11
-  language: ENGLISH
-  color:
-    red: 0
-    green: 176
-    blue: 80
-  italicized: false
-  bold: false
-- tokenType: GRAMMAR_TYPE
-  textPoints: 11
-  language: ENGLISH
-  color:
-    red: 0
-    green: 0
-    blue: 0
-  italicized: false
-  bold: false
-- tokenType: TRANSLATION
-  textPoints: 11
-  language: GREEK
-  color:
-    red: 0
-    green: 0
-    blue: 0
-  italicized: false
-  bold: false
-- tokenType: EXAMPLE
-  textPoints: 11
-  language: ENGLISH
-  color:
-    red: 0
-    green: 0
-    blue: 0
-  italicized: true
-  bold: false
-grammarTermTypes:
+vocabularyStructureSpecs:
+  - tokenType: TERM
+    rtfSpecs:
+      textPoints: 11
+      color:
+        red: 0
+        green: 176
+        blue: 80
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
+  - tokenType: GRAMMAR_TYPE
+    rtfSpecs:
+      textPoints: 11
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: true
+      pattern: "(^\\(v\\)|^\\(n\\)|^\\(phr v\\)|^\\(adj\\)).*"
+      compositeSpecs:
+        parts:
+          - "GRAMMAR_TYPE"
+          - "VERB_PARTICIPLES"
+        splitPattern: "\\s\\("
+  - tokenType: TRANSLATION
+    rtfSpecs:
+      textPoints: 11
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: GREEK
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
+      pattern: "[\\s\\p{InGreek}]+"
+  - tokenType: EXAMPLE
+    rtfSpecs:
+      textPoints: 11
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: true
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: true
+      potentiallySplit: false
+      potentiallyComposite: false
+vocabularyStructureTransitions:
+  - "TERM -> GRAMMAR_TYPE"
+  - "TERM -> TRANSLATION"
+  - "GRAMMAR_TYPE -> TRANSLATION"
+  - "TRANSLATION -> EXAMPLE"
+  - "EXAMPLE -> TERM"
+vocabularySpeechPartMappings:
   (n): NOUN
   (v): VERB
   (adj): ADJECTIVE
@@ -49,44 +81,68 @@ publisher:
   name: Publisher B
   description: Publisher B's Description
   publicationYear: 2017
-vocabularyTokensOrdering: TERM PRONUNCIATION GRAMMAR_TYPE TRANSLATION
-vocabularyTokenSpecs:
+vocabularyStructureSpecs:
   - tokenType: TERM
-    textPoints: 11
-    language: ENGLISH
-    color:
-      red: 75
-      green: 172
-      blue: 198
-    italicized: false
-    bold: true
+    rtfSpecs:
+      textPoints: 11
+      color:
+        red: 75
+        green: 172
+        blue: 198
+      italicized: false
+      bold: true
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
   - tokenType: PRONUNCIATION
-    textPoints: 11
-    language: ENGLISH
-    color:
-      red: 0
-      green: 0
-      blue: 0
-    italicized: false
-    bold: false
+    rtfSpecs:
+      textPoints: 11
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
   - tokenType: GRAMMAR_TYPE
-    textPoints: 10
-    language: ENGLISH
-    color:
-      red: 0
-      green: 0
-      blue: 0
-    italicized: true
-    bold: false
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: true
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
   - tokenType: TRANSLATION
-    textPoints: 10
-    language: ENGLISH
-    color:
-      red: 0
-      green: 0
-      blue: 0
-    italicized: false
-    bold: false
-grammarTermTypes:
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: true
+      potentiallySplit: false
+      potentiallyComposite: false
+vocabularyStructureTransitions:
+  - "TERM -> PRONUNCIATION"
+  - "PRONUNCIATION -> GRAMMAR_TYPE"
+  - "GRAMMAR_TYPE -> TRANSLATION"
+  - "TRANSLATION -> TERM"
+vocabularySpeechPartMappings:
   N.: NOUN
   adj.: ADJECTIVE

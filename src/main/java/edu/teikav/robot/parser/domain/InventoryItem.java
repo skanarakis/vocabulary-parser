@@ -5,7 +5,7 @@ import java.util.Objects;
 public class InventoryItem {
 
     private String term;
-    private TermGrammarTypes termType;
+    private SpeechPart termType;
     private String translation;
     private String example;
     private String pronunciation;
@@ -16,7 +16,7 @@ public class InventoryItem {
         this.term = term;
     }
 
-    public void setTermType(TermGrammarTypes termType) {
+    public void setTermType(SpeechPart termType) {
         this.termType = termType;
     }
 
@@ -32,7 +32,7 @@ public class InventoryItem {
         return term;
     }
 
-    public TermGrammarTypes getTermType() {
+    public SpeechPart getTermType() {
         return termType;
     }
 

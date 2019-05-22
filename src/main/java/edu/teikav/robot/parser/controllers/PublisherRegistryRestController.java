@@ -1,7 +1,7 @@
 package edu.teikav.robot.parser.controllers;
 
-import edu.teikav.robot.parser.dtos.PublisherGrammarContextDTO;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
+import edu.teikav.robot.parser.dtos.PublisherSpecificationDTO;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +16,9 @@ public class PublisherRegistryRestController {
 
     private Logger logger = LoggerFactory.getLogger(PublisherRegistryRestController.class);
 
-    private PublisherGrammarRegistry registry;
+    private PublisherSpecificationRegistry registry;
 
-    public PublisherRegistryRestController(PublisherGrammarRegistry registry) {
+    public PublisherRegistryRestController(PublisherSpecificationRegistry registry) {
         this.registry = registry;
     }
 
@@ -26,13 +26,13 @@ public class PublisherRegistryRestController {
     public void loadPublisher(@RequestBody String grammarDefinition) {
 
         logger.info("Uploading Publisher Grammar...");
-        registry.loadSingleGrammar(new ByteArrayInputStream(grammarDefinition.getBytes()));
+        registry.registerPublisherSpecification(new ByteArrayInputStream(grammarDefinition.getBytes()));
     }
 
     @GetMapping(value = "/publishers", produces = "application/json")
-    public List<PublisherGrammarContextDTO> getPublishers() {
+    public List<PublisherSpecificationDTO> getPublishers() {
 
-        return registry.getGrammarContexts().stream()
-                .map(PublisherGrammarContextDTO::new).collect(Collectors.toList());
+        return registry.getAllSpecs().stream()
+                .map(PublisherSpecificationDTO::new).collect(Collectors.toList());
     }
 }

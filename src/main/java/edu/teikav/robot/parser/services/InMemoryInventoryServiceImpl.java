@@ -13,32 +13,31 @@ public class InMemoryInventoryServiceImpl implements InventoryService {
 
     private Logger logger = LoggerFactory.getLogger(InMemoryInventoryServiceImpl.class);
 
-    private Map<String, InventoryItem> inventoryItemMap = new HashMap<>();
+    private Map<String, InventoryItem> inventoryItemsMap = new HashMap<>();
 
-    public InventoryItem getInventoryItem(String term) {
-        return inventoryItemMap.get(term);
+    @Override
+    public InventoryItem getItem(String term) {
+        return inventoryItemsMap.get(term);
     }
 
-    public boolean existsInventoryItem(String term) {
-        return inventoryItemMap.get(term) != null;
+    @Override
+    public boolean isInventoried(String term) {
+        return inventoryItemsMap.containsKey(term);
     }
 
-    public void saveNewInventoryItem(InventoryItem item) {
-        InventoryItem previousItem = inventoryItemMap.putIfAbsent(item.getTerm(), item);
+    @Override
+    public void save(InventoryItem item) {
+        InventoryItem previousItem = inventoryItemsMap.putIfAbsent(item.getTerm(), item);
         if (previousItem == null) {
             logger.debug("Saving new Vocabulary Term\n\t{}", item);
         } else {
-            logger.debug("Updating Vocabulary Term\n\t{}\nwith\n\t", previousItem, item);
+            logger.debug("Updating Vocabulary Term\n\t{}\nwith\n\t{}", previousItem, item);
+            // TODO: Update existing item
         }
     }
 
     @Override
-    public int numberOfInventoryTerms() {
-        return inventoryItemMap.size();
-    }
-
-    @Override
-    public void empty() {
-        inventoryItemMap.clear();
+    public int inventorySize() {
+        return inventoryItemsMap.size();
     }
 }

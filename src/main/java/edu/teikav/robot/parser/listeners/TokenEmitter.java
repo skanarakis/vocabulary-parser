@@ -1,30 +1,23 @@
 package edu.teikav.robot.parser.listeners;
 
-import java.io.OutputStream;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.xml.stream.XMLStreamException;
-
+import com.rtfparserkit.rtf.Command;
+import com.rtfparserkit.utils.RtfDumpListener;
+import edu.teikav.robot.parser.domain.FontColor;
+import edu.teikav.robot.parser.domain.Language;
+import edu.teikav.robot.parser.domain.RtfCallbackHandler;
+import edu.teikav.robot.parser.domain.VocabularyToken;
+import edu.teikav.robot.parser.util.TokenUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rtfparserkit.rtf.Command;
-import com.rtfparserkit.utils.RtfDumpListener;
+import javax.xml.stream.XMLStreamException;
+import java.io.OutputStream;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import edu.teikav.robot.parser.domain.FontColor;
-import edu.teikav.robot.parser.domain.Languages;
-import edu.teikav.robot.parser.domain.RTFParserCallbackProcessor;
-import edu.teikav.robot.parser.domain.VocabularyToken;
-import edu.teikav.robot.parser.util.TokenUtils;
+public abstract class TokenEmitter implements RtfCallbackHandler {
 
-public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserCallbackProcessor {
-
-    private Logger logger = LoggerFactory.getLogger(AbstractRTFCommandsCallbackProcessor.class);
+    private Logger logger = LoggerFactory.getLogger(TokenEmitter.class);
 
     private static final String ENTERED_GROUP = "Group Entered";
 
@@ -49,7 +42,7 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
     private static final String GENERATOR_COMMAND = "generator";
 
     // One instance of this class will be holding information for each consecutive token
-    // extracted from RFT document
+    // extracted from RTF document
     VocabularyToken currentToken;
 
     private int nextColorIndex = 1;
@@ -78,7 +71,7 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
     // Use delegation to preserve the XML output
     private RtfDumpListener rtfDumpListener;
 
-    AbstractRTFCommandsCallbackProcessor(OutputStream outputStream) throws XMLStreamException {
+    TokenEmitter(OutputStream outputStream) throws XMLStreamException {
         this.rtfDumpListener = new RtfDumpListener(outputStream);
         this.currentToken = new VocabularyToken();
         this.colorMap = new HashMap<>();
@@ -178,7 +171,7 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
                 break;
             case LANGUAGE_COMMAND:
                 if (hasParameter) {
-                    currentToken.setLanguage(Languages.languageFromID(parameter));
+                    currentToken.setLanguage(Language.languageFromID(parameter));
                 } else {
                     logger.error("Language unknown parameter");
                 }
@@ -247,6 +240,7 @@ public abstract class AbstractRTFCommandsCallbackProcessor implements RTFParserC
     public void reset() {
         colorMap.clear();
         nextColorIndex = 1;
+        currentToken = new VocabularyToken();
     }
 
     protected abstract void processToken(String token);

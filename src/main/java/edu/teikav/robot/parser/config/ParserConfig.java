@@ -1,8 +1,8 @@
 package edu.teikav.robot.parser.config;
 
-import edu.teikav.robot.parser.domain.PublisherGrammar;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
-import edu.teikav.robot.parser.services.YAMLBasedPublisherGrammarRegistryImpl;
+import edu.teikav.robot.parser.domain.PublisherDocumentInput;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
+import edu.teikav.robot.parser.services.YAMLPublisherSpecRegistryImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,9 +33,9 @@ public class ParserConfig {
     }
 
     @Bean
-    PublisherGrammarRegistry registry() {
-        Yaml yaml = new Yaml(new Constructor(PublisherGrammar.class));
-        return new YAMLBasedPublisherGrammarRegistryImpl(yaml);
+    PublisherSpecificationRegistry registry() {
+        Yaml yaml = new Yaml(new Constructor(PublisherDocumentInput.class));
+        return new YAMLPublisherSpecRegistryImpl(yaml);
     }
 
 }

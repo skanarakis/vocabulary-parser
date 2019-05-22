@@ -1,10 +1,8 @@
 package edu.teikav.robot.parser;
 
 import edu.teikav.robot.parser.services.InventoryService;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.assertj.core.api.Assertions;
-import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -23,7 +21,6 @@ import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Category(IntegrationTest.class)
-@Ignore
 public class VocabularyParserIT {
 
     private Logger logger = LoggerFactory.getLogger(VocabularyParserIT.class);
@@ -35,32 +32,22 @@ public class VocabularyParserIT {
     private InventoryService inventoryService;
 
     @Autowired
-    PublisherGrammarRegistry registry;
-
-    @After
-    public void cleanState() {
-        logger.info("resetParser called ******************************");
-        vocabularyParser.reset();
-        inventoryService.empty();
-    }
+    PublisherSpecificationRegistry registry;
 
     @Test
-    public void parseVocabularyForFirstPublisher() throws IOException {
-        logger.info("parseVocabularyForFirstPublisher called ******************************");
+    public void parseVocabularyForTwoPublishers() throws IOException {
         prepareRegistry();
+
+        logger.info("parseVocabularyForFirstPublisher called ******************************");
         vocabularyParser.parseVocabulary(
                 new File(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf"));
-        Assertions.assertThat(inventoryService.numberOfInventoryTerms()).isEqualTo(4);
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(4);
         logger.info("parseVocabularyForFirstPublisher finished ******************************");
-    }
 
-    @Test
-    public void parseVocabularyForSecondPublisher() throws IOException {
         logger.info("parseVocabularyForSecondPublisher called ******************************");
-        prepareRegistry();
         vocabularyParser.parseVocabulary(
                 new File(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-02.rtf"));
-        Assertions.assertThat(inventoryService.numberOfInventoryTerms()).isEqualTo(5);
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(4 + 5);
         logger.info("parseVocabularyForSecondPublisher finished ******************************");
     }
 
@@ -68,11 +55,9 @@ public class VocabularyParserIT {
         InputStream inputStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("publishers/two-publishers.yaml");
-        registry.clean();
-        registry.loadMultipleGrammars(inputStream);
-        Assertions.assertThat(registry.numberOfGrammars()).isEqualTo(2);
-
-
+        registry.removeAllPublisherSpecs();
+        registry.registerPublisherSpecifications(inputStream);
+        Assertions.assertThat(registry.registrySize()).isEqualTo(2);
     }
 
 }

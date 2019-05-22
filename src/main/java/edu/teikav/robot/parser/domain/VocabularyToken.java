@@ -1,27 +1,16 @@
 package edu.teikav.robot.parser.domain;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import java.util.Objects;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class VocabularyToken implements Cloneable {
 
-    private Languages language;
     private int textPoints;
     private boolean italicized;
     private boolean bold;
-    private FontColor color = FontColor.BLACK;
-    private String tokenString;
+    private FontColor color;
+    private String value;
+    private Language language;
     private VocabularyTokenType tokenType;
-
-    public Languages getLanguage() {
-        return language;
-    }
-
-    public void setLanguage(Languages language) {
-        this.language = language;
-    }
 
     public int getTextPoints() {
         return textPoints;
@@ -55,12 +44,20 @@ public class VocabularyToken implements Cloneable {
         this.color = color;
     }
 
-    public String getTokenString() {
-        return tokenString;
+    public String getValue() {
+        return value;
     }
 
-    public void setTokenString(String tokenString) {
-        this.tokenString = tokenString;
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
     }
 
     public VocabularyTokenType getTokenType() {
@@ -76,40 +73,29 @@ public class VocabularyToken implements Cloneable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         VocabularyToken that = (VocabularyToken) o;
-        return language == that.language &&
-                textPoints == that.textPoints &&
-                italicized == that.italicized &&
-                bold == that.bold &&
-                color == that.color;
+        return getTextPoints() == that.getTextPoints() &&
+                isItalicized() == that.isItalicized() &&
+                isBold() == that.isBold() &&
+                getColor().equals(that.getColor()) &&
+                getLanguage() == that.getLanguage();
     }
 
     @Override
     public int hashCode() {
-        // We need to have the same Hash-Code among different runs, so we use the ENUM ordinal instead of ENUM itself
-        return Objects.hash(language.ordinal(), textPoints, italicized, bold, color);
+        return Objects.hash(getTextPoints(), isBold(), isItalicized(), getColor(), getLanguage().ordinal());
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\nVocabularyToken{");
-        if (tokenString != null) {
-            sb.append("\n\tToken = ").append(tokenString);
-        }
-        if (tokenType != null) {
-            sb.append("\n\tTokenType = ").append(tokenType);
-        }
-        sb.append("\n\tlanguage=").append(language);
-        sb.append("\n\ttextPoints=").append(textPoints);
-        if (italicized) {
-            sb.append("\n\titalicized");
-        }
-        if (bold) {
-            sb.append("\n\tbold");
-        }
-        sb.append("\n\tcolor=").append(color);
-
-        return sb.toString();
+        return "VocabularyToken{" +
+                "textPoints=" + textPoints +
+                ", italicized=" + italicized +
+                ", bold=" + bold +
+                ", color=" + color +
+                ", value='" + value + '\'' +
+                ", language=" + language +
+                ", tokenType=" + tokenType +
+                '}';
     }
 
     @Override
@@ -121,3 +107,5 @@ public class VocabularyToken implements Cloneable {
         }
     }
 }
+
+

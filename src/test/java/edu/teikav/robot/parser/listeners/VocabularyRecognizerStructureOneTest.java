@@ -1,14 +1,10 @@
 package edu.teikav.robot.parser.listeners;
 
-import static org.mockito.ArgumentMatchers.any;
-
-import java.io.OutputStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
-import javax.xml.stream.XMLStreamException;
-
+import edu.teikav.robot.parser.domain.InventoryItem;
+import edu.teikav.robot.parser.domain.PublisherSpecification;
+import edu.teikav.robot.parser.domain.SpeechPart;
+import edu.teikav.robot.parser.services.InventoryService;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -18,18 +14,21 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import edu.teikav.robot.parser.domain.InventoryItem;
-import edu.teikav.robot.parser.domain.PublisherGrammarContext;
-import edu.teikav.robot.parser.domain.TermGrammarTypes;
-import edu.teikav.robot.parser.services.InventoryService;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
+import javax.xml.stream.XMLStreamException;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @RunWith(MockitoJUnitRunner.class)
 public class VocabularyRecognizerStructureOneTest {
 
     private VocabularyRecognizer recognizer;
 
-    private static PublisherGrammarRegistry registry;
+    private static PublisherSpecificationRegistry registry;
 
     @Mock
     private InventoryService inventoryService;
@@ -39,48 +38,49 @@ public class VocabularyRecognizerStructureOneTest {
 
     @BeforeClass
     public static void init() {
-        registry = Mockito.mock(PublisherGrammarRegistry.class);
-        PublisherGrammarContext context = Mockito.mock(PublisherGrammarContext.class);
+        registry = Mockito.mock(PublisherSpecificationRegistry.class);
+        PublisherSpecification spec = Mockito.mock(PublisherSpecification.class);
 
-        Mockito.when(context.vocabularyOrdering()).thenReturn(
-                Arrays.asList("TERM", "GRAMMAR_TYPE", "TRANSLATION", "EXAMPLE")
-        );
+        // Vocabulary Structure - Graph mock specs
+        Mockito.when(spec.containsRootVocabularyToken("TERM")).thenReturn(true);
+        Mockito.when(registry.getActiveSpec()).thenReturn(Optional.of(spec));
 
-        Mockito.when(context.isPartPotentiallyLast("TERM")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyLast("GRAMMAR_TYPE")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyLast("TRANSLATION")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyLast("EXAMPLE")).thenReturn(true);
+        Mockito.when(spec.getValidTransitionsFor("TERM"))
+                .thenReturn(Arrays.asList("GRAMMAR_TYPE", "TRANSLATION"));
+        Mockito.when(spec.getValidTransitionsFor("GRAMMAR_TYPE"))
+                .thenReturn(Collections.singletonList("TRANSLATION"));
+        Mockito.when(spec.getValidTransitionsFor("TRANSLATION"))
+                .thenReturn(Collections.singletonList("EXAMPLE"));
+        Mockito.when(spec.getValidTransitionsFor("EXAMPLE"))
+                .thenReturn(Collections.singletonList("TERM"));
 
-        Mockito.when(context.isPartPotentiallySplit("TERM")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallySplit("GRAMMAR_TYPE")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallySplit("TRANSLATION")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallySplit("EXAMPLE")).thenReturn(false);
+        // Vocabulary Structure - Token Types mock specs
+        Mockito.when(spec.isTermPotentiallyLast("TERM")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallySplit("TERM")).thenReturn(false);
 
-        Mockito.when(context.isPartPotentiallyComposite("GRAMMAR_TYPE")).thenReturn(true);
-        Mockito.when(context.isPartPotentiallyComposite("TRANSLATION")).thenReturn(false);
-        Mockito.when(context.isPartPotentiallyComposite("EXAMPLE")).thenReturn(false);
-
-        Mockito.when(context.getCompositePartsFor("GRAMMAR_TYPE"))
+        Mockito.when(spec.isTermPotentiallyLast("GRAMMAR_TYPE")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallySplit("GRAMMAR_TYPE")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallyComposite("GRAMMAR_TYPE")).thenReturn(true);
+        Mockito.when(spec.getTermPattern("GRAMMAR_TYPE"))
+                .thenReturn("(^\\(v\\)|^\\(n\\)|^\\(phr v\\)|^\\(adj\\)).*");
+        Mockito.when(spec.getCompositePartsFor("GRAMMAR_TYPE"))
                 .thenReturn(Arrays.asList("GRAMMAR_TYPE", "VERB_PARTICIPLES"));
-        Mockito.when(context.getCompositePartSplitToken("GRAMMAR_TYPE"))
+        Mockito.when(spec.getCompositePartSplitToken("GRAMMAR_TYPE"))
                 .thenReturn("\\s\\(");
 
-        Mockito.when(context.patternOfToken("GRAMMAR_TYPE")).thenReturn("(^\\(v\\)|^\\(n\\)|^\\(phr v\\)|^\\(adj\\)).*");
-        Mockito.when(context.patternOfToken("TRANSLATION")).thenReturn("[\\s\\p{InGreek}]+");
+        Mockito.when(spec.isTermPotentiallyLast("TRANSLATION")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallySplit("TRANSLATION")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallyComposite("TRANSLATION")).thenReturn(false);
+        Mockito.when(spec.getTermPattern("TRANSLATION")).thenReturn("[\\s\\p{InGreek}]+");
 
-        Mockito.when(context.getStructureRelations()).thenReturn(
-                Arrays.asList("TERM -> GRAMMAR_TYPE",
-                        "TERM -> TRANSLATION",
-                        "GRAMMAR_TYPE -> TRANSLATION",
-                        "TRANSLATION -> EXAMPLE",
-                        "EXAMPLE -> TERM")
-        );
+        Mockito.when(spec.isTermPotentiallyLast("EXAMPLE")).thenReturn(true);
+        Mockito.when(spec.isTermPotentiallySplit("EXAMPLE")).thenReturn(false);
+        Mockito.when(spec.isTermPotentiallyComposite("EXAMPLE")).thenReturn(false);
 
-        Mockito.when(context.getGrammarTypeFor("(n)")).thenReturn(Optional.of(TermGrammarTypes.NOUN));
-        Mockito.when(context.getGrammarTypeFor("(v)")).thenReturn(Optional.of(TermGrammarTypes.VERB));
-        Mockito.when(context.getGrammarTypeFor("(adj)")).thenReturn(Optional.of(TermGrammarTypes.ADJECTIVE));
-
-        Mockito.when(registry.getActiveGrammarContext()).thenReturn(Optional.of(context));
+        // Speech Parts mock specs
+        Mockito.when(spec.getSpeechPartFor("(n)")).thenReturn(Optional.of(SpeechPart.NOUN));
+        Mockito.when(spec.getSpeechPartFor("(v)")).thenReturn(Optional.of(SpeechPart.VERB));
+        Mockito.when(spec.getSpeechPartFor("(adj)")).thenReturn(Optional.of(SpeechPart.ADJECTIVE));
     }
 
     @Before
@@ -101,11 +101,11 @@ public class VocabularyRecognizerStructureOneTest {
         tokens.forEach(recognizer::processToken);
 
         InventoryItem item = new InventoryItem(term);
-        item.setTermType(TermGrammarTypes.NOUN);
+        item.setTermType(SpeechPart.NOUN);
         item.setTranslation(termTranslation);
         item.setExample(termExample);
         Mockito.verify(inventoryService, Mockito.times(1))
-                .saveNewInventoryItem(item);
+                .save(item);
     }
 
     @Test
@@ -117,19 +117,19 @@ public class VocabularyRecognizerStructureOneTest {
         String termExample = "I broke my leg last week";
 
         String[] partsOfComposite = compositePart.split("\\s\\(");
-        Assert.assertTrue(partsOfComposite.length == 2);
+        Assert.assertEquals(2, partsOfComposite.length);
 
         List<String> tokens = Arrays.asList(term, compositePart, termTranslation, termExample);
 
         tokens.forEach(recognizer::processToken);
 
         InventoryItem item = new InventoryItem(term);
-        item.setTermType(TermGrammarTypes.VERB);
+        item.setTermType(SpeechPart.VERB);
         item.setTranslation(termTranslation);
         item.setExample(termExample);
         item.setVerbParticiples(partsOfComposite[1]);
         Mockito.verify(inventoryService, Mockito.times(1))
-                .saveNewInventoryItem(item);
+                .save(item);
     }
 
     @Test
@@ -151,7 +151,7 @@ public class VocabularyRecognizerStructureOneTest {
         tokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(2))
-                .saveNewInventoryItem(any(InventoryItem.class));
+                .save(any(InventoryItem.class));
     }
 
     @Test
@@ -172,7 +172,7 @@ public class VocabularyRecognizerStructureOneTest {
         tokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(2))
-                .saveNewInventoryItem(any(InventoryItem.class));
+                .save(any(InventoryItem.class));
     }
 
     @Test
@@ -205,6 +205,6 @@ public class VocabularyRecognizerStructureOneTest {
         tokens.forEach(recognizer::processToken);
 
         Mockito.verify(inventoryService, Mockito.times(4))
-                .saveNewInventoryItem(any(InventoryItem.class));
+                .save(any(InventoryItem.class));
     }
 }

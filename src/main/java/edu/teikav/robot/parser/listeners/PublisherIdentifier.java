@@ -1,71 +1,71 @@
 package edu.teikav.robot.parser.listeners;
 
+import edu.teikav.robot.parser.domain.PublisherSpecification;
+import edu.teikav.robot.parser.domain.VocabularyToken;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+import javax.xml.stream.XMLStreamException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
-
-import edu.teikav.robot.parser.domain.PublisherGrammarContext;
-import edu.teikav.robot.parser.domain.VocabularyToken;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
-
 @Component
-@Qualifier("FirstPassParser")
-public class PublisherIdentifier extends AbstractRTFCommandsCallbackProcessor {
+@Qualifier("PublisherIdentifier")
+public class PublisherIdentifier extends TokenEmitter {
 
-    private Logger logger = LoggerFactory.getLogger(AbstractRTFCommandsCallbackProcessor.class);
+    private Logger logger = LoggerFactory.getLogger(PublisherIdentifier.class);
 
     private boolean taskCompleted = false;
 
-    private PublisherGrammarRegistry registry;
-    private List<VocabularyToken> tokens;
+    private PublisherSpecificationRegistry registry;
+    private List<VocabularyToken> accumulatedTokens;
 
-    PublisherIdentifier(PublisherGrammarRegistry registry,
-                        @Qualifier("FirstPassOutputStream") OutputStream outputStream)
-            throws XMLStreamException {
+    @Autowired
+    PublisherIdentifier(PublisherSpecificationRegistry registry,
+                        @Qualifier("FirstPassOutputStream") OutputStream outputStream) throws XMLStreamException {
         super(outputStream);
         this.registry = registry;
-        this.tokens = new ArrayList<>();
+        this.accumulatedTokens = new ArrayList<>();
     }
 
     @Override
-    public void processToken(String tokenString) {
+    public void processToken(final String tokenString) {
 
-        // In this first pass we only care for matching a grammar in the Registry
+        // In the first pass we attempt to identify a publisher in the Registry
         // So, for every token that is being parsed, we add it in our internal list of tokens
         // and then re-calculate their combined hash-code.
-        // Hash-code of each token cares only about its formatting (Bold/Italicized/Font-Size/Color)
+        // Hash-code of each token is calculated based on their formatting
+        // (Bold/Italicized/Font-Size/Color) and language
+
         // Hopefully, at some time where we have parsed a complete vocabulary term (we do not
-        // know where a vocabulary term ends without a grammar) having its constituent tokens,
-        // we will have a hash-code that matches the hash-code of a grammar that has been properly
-        // registered in the Registry. At that point, our work is done and we can let the parsing
-        // continue just to output the XML file for debugging reasons.
+        // know where a vocabulary term ends without knowing the publisher context)
+        // we will have a hash-code that matches any of the hash-codes stored for publishers in Registry
+        // At that point, our work is done (we have identified a publisher) and we can let the parsing continue
+        // just to output the XML file for debugging reasons.
         if (!taskCompleted) {
             logger.debug("Current Token is \n{}", currentToken);
 
+            // Token value is set here. Other token fields have been populated in the parent abstract listener class
+            currentToken.setValue(tokenString.trim());
             // Save token to the internal list of tokens participating in the hashing
-            // Other token fields have been populated in the parent abstract listener class
-            currentToken.setTokenString(tokenString.trim());
-            tokens.add(currentToken.clone());
+            accumulatedTokens.add(currentToken.clone());
 
-            // Calculate new hash code
-            int vocabularyTermHashCode = Objects.hash(tokens);
-            logger.debug("Hash Code calculated : {}", vocabularyTermHashCode);
-            logger.debug("Tokens involved in hash code calculation : \n{}", tokens);
+            // Calculate new hash code and ask Registry for any matches
+            int calculatedHashCode = Objects.hash(accumulatedTokens);
+            logger.debug("New Hash Code calculated : {}", calculatedHashCode);
+            logger.debug("Tokens involved in hash code calculation till now: \n{}", accumulatedTokens);
 
-            // Ask Registry if there is any match
-            Optional<PublisherGrammarContext> grammarContextOptional = registry.findGrammar(vocabularyTermHashCode);
-            if (grammarContextOptional.isPresent()) {
-                // Set the current active grammar and end task
-                registry.setActiveGrammarContext(grammarContextOptional.get());
+            Optional<PublisherSpecification> optSpec = registry.findSpecByHashCode(calculatedHashCode);
+            if (optSpec.isPresent()) {
+                // Set the retrieved publisher specification as the active one in Registry and signal end of processing
+                registry.setActiveSpec(optSpec.get());
                 taskCompleted = true;
             }
         }
@@ -74,11 +74,12 @@ public class PublisherIdentifier extends AbstractRTFCommandsCallbackProcessor {
     @Override
     public void reset() {
 
-        // Resetting the colors with a call to super.reset()
+        // Resetting the token emitter state with a call to super
         super.reset();
 
         logger.info("Resetting {}", this.getClass().getName());
         taskCompleted = false;
-        tokens.clear();
+        accumulatedTokens.clear();
+        registry.setActiveSpec(null);
     }
 }

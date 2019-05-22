@@ -1,21 +1,21 @@
 package edu.teikav.robot.parser.listeners;
 
-import static edu.teikav.robot.parser.ParserStaticConstants.FIRST_PASS_TEST_OUTPUT_XML_FILENAME;
-import static edu.teikav.robot.parser.ParserStaticConstants.SECOND_PASS_TEST_OUTPUT_XML_FILENAME;
-import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
-import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.xml.stream.XMLStreamException;
-
+import com.rtfparserkit.parser.IRtfListener;
+import com.rtfparserkit.parser.IRtfParser;
+import com.rtfparserkit.parser.IRtfSource;
+import com.rtfparserkit.parser.RtfStreamSource;
+import com.rtfparserkit.parser.standard.StandardRtfParser;
+import edu.teikav.robot.parser.FileUtils;
+import edu.teikav.robot.parser.IntegrationTest;
+import edu.teikav.robot.parser.domain.PublisherDocumentInput;
+import edu.teikav.robot.parser.domain.SpeechPart;
+import edu.teikav.robot.parser.services.InMemoryInventoryServiceImpl;
+import edu.teikav.robot.parser.services.InventoryService;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
+import edu.teikav.robot.parser.services.YAMLPublisherSpecRegistryImpl;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -29,29 +29,21 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
-import com.rtfparserkit.parser.IRtfListener;
-import com.rtfparserkit.parser.IRtfParser;
-import com.rtfparserkit.parser.IRtfSource;
-import com.rtfparserkit.parser.RtfStreamSource;
-import com.rtfparserkit.parser.standard.StandardRtfParser;
+import javax.xml.stream.XMLStreamException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import edu.teikav.robot.parser.FileUtils;
-import edu.teikav.robot.parser.IntegrationTest;
-import edu.teikav.robot.parser.domain.PublisherGrammar;
-import edu.teikav.robot.parser.domain.TermGrammarTypes;
-import edu.teikav.robot.parser.services.InMemoryInventoryServiceImpl;
-import edu.teikav.robot.parser.services.InventoryService;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
-import edu.teikav.robot.parser.services.YAMLBasedPublisherGrammarRegistryImpl;
+import static edu.teikav.robot.parser.ParserStaticConstants.*;
 
 @RunWith(SpringRunner.class)
 @Category(IntegrationTest.class)
-@Ignore
 public class VocabularyRecognizerIT {
 
     private Logger logger = LoggerFactory.getLogger(VocabularyRecognizerIT.class);
 
-    private static PublisherGrammarRegistry registry;
+    private static PublisherSpecificationRegistry registry;
 
     private InventoryService inventoryService;
 
@@ -66,11 +58,11 @@ public class VocabularyRecognizerIT {
     @BeforeClass
     public static void preloadRegistry() {
 
-        registry = new YAMLBasedPublisherGrammarRegistryImpl(new Yaml(new Constructor(PublisherGrammar.class)));
+        registry = new YAMLPublisherSpecRegistryImpl(new Yaml(new Constructor(PublisherDocumentInput.class)));
         InputStream publishersInputStream = VocabularyRecognizerIT.class
                 .getClassLoader()
                 .getResourceAsStream("publishers/all-publishers.yaml");
-        registry.loadMultipleGrammars(publishersInputStream);
+        registry.registerPublisherSpecifications(publishersInputStream);
     }
 
     @Before
@@ -99,13 +91,13 @@ public class VocabularyRecognizerIT {
                 inventoryService, secondPassOutputStream);
         parser.parse(source, vocabularySemanticsTokenizer);
 
-        Assertions.assertThat(inventoryService.numberOfInventoryTerms()).isEqualTo(4);
-        Assertions.assertThat(inventoryService.existsInventoryItem("frog")).isTrue();
-        Assertions.assertThat(inventoryService.getInventoryItem("frog").getTermType())
-                .isEqualTo(TermGrammarTypes.NOUN);
-        Assertions.assertThat(inventoryService.getInventoryItem("frog").getExample())
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(4);
+        Assertions.assertThat(inventoryService.isInventoried("frog")).isTrue();
+        Assertions.assertThat(inventoryService.getItem("frog").getTermType())
+                .isEqualTo(SpeechPart.NOUN);
+        Assertions.assertThat(inventoryService.getItem("frog").getExample())
                 .isEqualTo("Frogs are small green animals.");
-        Assertions.assertThat(inventoryService.getInventoryItem("frog").getTranslation())
+        Assertions.assertThat(inventoryService.getItem("frog").getTranslation())
                 .isEqualTo("βάτραχος");
 
     }
@@ -131,12 +123,12 @@ public class VocabularyRecognizerIT {
                 inventoryService, secondPassOutputStream);
         parser.parse(source, vocabularySemanticsTokenizer);
 
-        Assertions.assertThat(inventoryService.numberOfInventoryTerms()).isEqualTo(5);
-        Assertions.assertThat(inventoryService.existsInventoryItem("incandescent")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("fluorescent")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("prolonged")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("shade")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("subtle")).isTrue();
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(5);
+        Assertions.assertThat(inventoryService.isInventoried("incandescent")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("fluorescent")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("prolonged")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("shade")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("subtle")).isTrue();
     }
 
     @Test
@@ -160,14 +152,14 @@ public class VocabularyRecognizerIT {
                 inventoryService, secondPassOutputStream);
         parser.parse(source, vocabularySemanticsTokenizer);
 
-        Assertions.assertThat(inventoryService.numberOfInventoryTerms()).isEqualTo(7);
-        Assertions.assertThat(inventoryService.existsInventoryItem("neighbour")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("lighthouse")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("keeper")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("coast")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("mean")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("tower")).isTrue();
-        Assertions.assertThat(inventoryService.existsInventoryItem("shine")).isTrue();
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(7);
+        Assertions.assertThat(inventoryService.isInventoried("neighbour")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("lighthouse")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("keeper")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("coast")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("mean")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("tower")).isTrue();
+        Assertions.assertThat(inventoryService.isInventoried("shine")).isTrue();
     }
 
     @TestConfiguration

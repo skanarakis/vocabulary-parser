@@ -1,18 +1,17 @@
 package edu.teikav.robot.parser.listeners;
 
-import static edu.teikav.robot.parser.ParserStaticConstants.FIRST_PASS_TEST_OUTPUT_XML_FILENAME;
-import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
-import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
-import static org.mockito.ArgumentMatchers.any;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Optional;
-
-import javax.xml.stream.XMLStreamException;
-
+import com.rtfparserkit.parser.IRtfListener;
+import com.rtfparserkit.parser.IRtfParser;
+import com.rtfparserkit.parser.IRtfSource;
+import com.rtfparserkit.parser.RtfStreamSource;
+import com.rtfparserkit.parser.standard.StandardRtfParser;
+import com.rtfparserkit.utils.RtfDumpListener;
+import edu.teikav.robot.parser.FileUtils;
+import edu.teikav.robot.parser.IntegrationTest;
+import edu.teikav.robot.parser.domain.PublisherDocumentInput;
+import edu.teikav.robot.parser.domain.PublisherSpecification;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
+import edu.teikav.robot.parser.services.YAMLPublisherSpecRegistryImpl;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,26 +25,22 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
-import com.rtfparserkit.parser.IRtfListener;
-import com.rtfparserkit.parser.IRtfParser;
-import com.rtfparserkit.parser.IRtfSource;
-import com.rtfparserkit.parser.RtfStreamSource;
-import com.rtfparserkit.parser.standard.StandardRtfParser;
-import com.rtfparserkit.utils.RtfDumpListener;
+import javax.xml.stream.XMLStreamException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Optional;
 
-import edu.teikav.robot.parser.FileUtils;
-import edu.teikav.robot.parser.IntegrationTest;
-import edu.teikav.robot.parser.domain.PublisherGrammar;
-import edu.teikav.robot.parser.domain.PublisherGrammarContext;
-import edu.teikav.robot.parser.services.PublisherGrammarRegistry;
-import edu.teikav.robot.parser.services.YAMLBasedPublisherGrammarRegistryImpl;
+import static edu.teikav.robot.parser.ParserStaticConstants.*;
+import static org.mockito.ArgumentMatchers.any;
 
 @RunWith(SpringRunner.class)
 @Category(IntegrationTest.class)
 public class PublisherIdentifierIT {
 
     @MockBean
-    private PublisherGrammarRegistry grammarRegistry;
+    private PublisherSpecificationRegistry grammarRegistry;
 
     @Autowired
     private OutputStream outputStream;
@@ -56,15 +51,15 @@ public class PublisherIdentifierIT {
     @Test
     public void identifyGrammar_mockedRegistry() throws IOException, XMLStreamException {
 
-        PublisherGrammarContext context = Mockito.mock(PublisherGrammarContext.class);
-        Optional<PublisherGrammarContext> contextOptional = Optional.of(context);
-        Mockito.when(grammarRegistry.findGrammar(any(Integer.class)))
+        PublisherSpecification context = Mockito.mock(PublisherSpecification.class);
+        Optional<PublisherSpecification> contextOptional = Optional.of(context);
+        Mockito.when(grammarRegistry.findSpecByHashCode(any(Integer.class)))
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.empty())
                 .thenReturn(Optional.empty())
                 .thenReturn(contextOptional);
-        Mockito.doNothing().when(grammarRegistry).setActiveGrammarContext(any(PublisherGrammarContext.class));
+        Mockito.doNothing().when(grammarRegistry).setActiveSpec(any(PublisherSpecification.class));
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -72,22 +67,22 @@ public class PublisherIdentifierIT {
         IRtfListener firstPassListener = new PublisherIdentifier(grammarRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
-        Mockito.verify(grammarRegistry, Mockito.times(5)).findGrammar(any(Integer.class));
-        Mockito.verify(grammarRegistry, Mockito.times(1)).setActiveGrammarContext(context);
+        Mockito.verify(grammarRegistry, Mockito.times(5)).findSpecByHashCode(any(Integer.class));
+        Mockito.verify(grammarRegistry, Mockito.times(1)).setActiveSpec(context);
     }
 
     @Test
     public void identifyGrammar_whenRealRegistry_hasOneRegisteredGrammar()
             throws IOException, XMLStreamException {
 
-        PublisherGrammarRegistry registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
-        PublisherGrammarRegistry spiedRegistry = Mockito.spy(registry);
+        PublisherSpecificationRegistry registry = new YAMLPublisherSpecRegistryImpl(yaml);
+        PublisherSpecificationRegistry spiedRegistry = Mockito.spy(registry);
 
         InputStream publishersInputStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("publishers/one-publisher.yaml");
-        spiedRegistry.loadSingleGrammar(publishersInputStream);
-        Assertions.assertThat(spiedRegistry.numberOfGrammars()).isEqualTo(1);
+        spiedRegistry.registerPublisherSpecification(publishersInputStream);
+        Assertions.assertThat(spiedRegistry.registrySize()).isEqualTo(1);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -95,21 +90,21 @@ public class PublisherIdentifierIT {
         IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
-        Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
+        Mockito.verify(spiedRegistry, Mockito.times(4)).findSpecByHashCode(any(Integer.class));
     }
 
     @Test
     public void identifyGrammarOfFirstPublisher_whenRealRegistry_hasTwoRegisteredGrammars()
             throws IOException, XMLStreamException {
 
-        PublisherGrammarRegistry registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
-        PublisherGrammarRegistry spiedRegistry = Mockito.spy(registry);
+        PublisherSpecificationRegistry registry = new YAMLPublisherSpecRegistryImpl(yaml);
+        PublisherSpecificationRegistry spiedRegistry = Mockito.spy(registry);
 
         InputStream publishersInputStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("publishers/two-publishers.yaml");
-        spiedRegistry.loadMultipleGrammars(publishersInputStream);
-        Assertions.assertThat(spiedRegistry.numberOfGrammars()).isEqualTo(2);
+        spiedRegistry.registerPublisherSpecifications(publishersInputStream);
+        Assertions.assertThat(spiedRegistry.registrySize()).isEqualTo(2);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -117,20 +112,20 @@ public class PublisherIdentifierIT {
         IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
-        Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
+        Mockito.verify(spiedRegistry, Mockito.times(4)).findSpecByHashCode(any(Integer.class));
     }
 
     @Test
     public void identifyGrammarOfFirstPublisher_whenRealRegistry_hasManyRegisteredGrammars()
             throws IOException, XMLStreamException {
 
-        PublisherGrammarRegistry registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
-        PublisherGrammarRegistry spiedRegistry = Mockito.spy(registry);
+        PublisherSpecificationRegistry registry = new YAMLPublisherSpecRegistryImpl(yaml);
+        PublisherSpecificationRegistry spiedRegistry = Mockito.spy(registry);
 
         InputStream publishersInputStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("publishers/all-publishers.yaml");
-        spiedRegistry.loadMultipleGrammars(publishersInputStream);
+        spiedRegistry.registerPublisherSpecifications(publishersInputStream);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -138,21 +133,21 @@ public class PublisherIdentifierIT {
         IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
-        Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
+        Mockito.verify(spiedRegistry, Mockito.times(4)).findSpecByHashCode(any(Integer.class));
     }
 
     @Test
     public void identifyGrammarOfSecondPublisher_whenRealRegistry_hasTwoRegisteredGrammars()
             throws IOException, XMLStreamException {
 
-        PublisherGrammarRegistry registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
-        PublisherGrammarRegistry spiedRegistry = Mockito.spy(registry);
+        PublisherSpecificationRegistry registry = new YAMLPublisherSpecRegistryImpl(yaml);
+        PublisherSpecificationRegistry spiedRegistry = Mockito.spy(registry);
 
         InputStream publishersInputStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("publishers/two-publishers.yaml");
-        spiedRegistry.loadMultipleGrammars(publishersInputStream);
-        Assertions.assertThat(spiedRegistry.numberOfGrammars()).isEqualTo(2);
+        spiedRegistry.registerPublisherSpecifications(publishersInputStream);
+        Assertions.assertThat(spiedRegistry.registrySize()).isEqualTo(2);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-02.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -160,20 +155,20 @@ public class PublisherIdentifierIT {
         IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
-        Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
+        Mockito.verify(spiedRegistry, Mockito.times(4)).findSpecByHashCode(any(Integer.class));
     }
 
     @Test
     public void identifyGrammarOfThirdPublisher_whenRealRegistry_hasManyRegisteredGrammars()
             throws IOException, XMLStreamException {
 
-        PublisherGrammarRegistry registry = new YAMLBasedPublisherGrammarRegistryImpl(yaml);
-        PublisherGrammarRegistry spiedRegistry = Mockito.spy(registry);
+        PublisherSpecificationRegistry registry = new YAMLPublisherSpecRegistryImpl(yaml);
+        PublisherSpecificationRegistry spiedRegistry = Mockito.spy(registry);
 
         InputStream publishersInputStream = this.getClass()
                 .getClassLoader()
                 .getResourceAsStream("publishers/all-publishers.yaml");
-        spiedRegistry.loadMultipleGrammars(publishersInputStream);
+        spiedRegistry.registerPublisherSpecifications(publishersInputStream);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "OurW-2b.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -181,7 +176,7 @@ public class PublisherIdentifierIT {
         IRtfListener firstPassListener = new PublisherIdentifier(spiedRegistry, outputStream);
         parser.parse(source, firstPassListener);
 
-        Mockito.verify(spiedRegistry, Mockito.times(4)).findGrammar(any(Integer.class));
+        Mockito.verify(spiedRegistry, Mockito.times(4)).findSpecByHashCode(any(Integer.class));
     }
 
     @Test
@@ -204,7 +199,7 @@ public class PublisherIdentifierIT {
 
         @Bean
         Yaml yaml() {
-            return new Yaml(new Constructor(PublisherGrammar.class));
+            return new Yaml(new Constructor(PublisherDocumentInput.class));
         }
     }
 

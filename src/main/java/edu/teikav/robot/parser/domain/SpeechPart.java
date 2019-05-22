@@ -1,6 +1,6 @@
 package edu.teikav.robot.parser.domain;
 
-public enum TermGrammarTypes {
+public enum SpeechPart {
     NOUN,
     VERB,
     ADJECTIVE,

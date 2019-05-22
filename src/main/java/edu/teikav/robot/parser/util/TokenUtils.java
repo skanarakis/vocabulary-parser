@@ -1,14 +1,17 @@
 package edu.teikav.robot.parser.util;
 
-import java.util.regex.Pattern;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.regex.Pattern;
 
 public class TokenUtils
 {
     private static Logger logger = LoggerFactory.getLogger(TokenUtils.class);
     private static Pattern digitsOnlyPattern = Pattern.compile("^([0-9]+\\.?[0-9]*|[0-9]*\\.[0-9]+)$");
+
+    // Non-instantiable
+    private TokenUtils() {}
 
     public static boolean isDegenerate(String token) {
 

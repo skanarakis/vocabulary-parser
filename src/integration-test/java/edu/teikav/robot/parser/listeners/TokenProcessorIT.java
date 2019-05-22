@@ -1,26 +1,23 @@
 package edu.teikav.robot.parser.listeners;
 
-import static edu.teikav.robot.parser.FileUtils.getOutputStream;
-import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
-import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.xml.stream.XMLStreamException;
-
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-
 import com.rtfparserkit.parser.IRtfListener;
 import com.rtfparserkit.parser.IRtfParser;
 import com.rtfparserkit.parser.IRtfSource;
 import com.rtfparserkit.parser.RtfStreamSource;
 import com.rtfparserkit.parser.standard.StandardRtfParser;
-
 import edu.teikav.robot.parser.IntegrationTest;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import javax.xml.stream.XMLStreamException;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import static edu.teikav.robot.parser.FileUtils.getOutputStream;
+import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
+import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
 
 @Category(IntegrationTest.class)
 public class TokenProcessorIT {
@@ -32,7 +29,7 @@ public class TokenProcessorIT {
         IRtfParser parser = new StandardRtfParser();
 
         OutputStream outputStream = getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "test-token-processing-ourW2b.xml");
-        IRtfListener testProcessor = new AbstractRTFCommandsCallbackProcessor(outputStream) {
+        IRtfListener testProcessor = new TokenEmitter(outputStream) {
             @Override
             protected void processToken(String token) {
                 // Do nothing
@@ -47,7 +44,7 @@ public class TokenProcessorIT {
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
         OutputStream outputStream = getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "test-token-processing-likeEn.xml");
-        IRtfListener testProcessor = new AbstractRTFCommandsCallbackProcessor(outputStream) {
+        IRtfListener testProcessor = new TokenEmitter(outputStream) {
             @Override
             protected void processToken(String token) {
                 // Do nothing

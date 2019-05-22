@@ -4,13 +4,11 @@ import edu.teikav.robot.parser.domain.InventoryItem;
 
 public interface InventoryService {
 
-    InventoryItem getInventoryItem(String term);
+    InventoryItem getItem(String term);
 
-    boolean existsInventoryItem(String term);
+    boolean isInventoried(String term);
 
-    void saveNewInventoryItem(InventoryItem item);
+    void save(InventoryItem item);
 
-    int numberOfInventoryTerms();
-
-    void empty();
+    int inventorySize();
 }
