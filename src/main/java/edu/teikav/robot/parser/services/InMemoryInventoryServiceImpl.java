@@ -3,12 +3,11 @@ package edu.teikav.robot.parser.services;
 import edu.teikav.robot.parser.domain.InventoryItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
 public class InMemoryInventoryServiceImpl implements InventoryService {
 
     private Logger logger = LoggerFactory.getLogger(InMemoryInventoryServiceImpl.class);
@@ -18,6 +17,11 @@ public class InMemoryInventoryServiceImpl implements InventoryService {
     @Override
     public InventoryItem getItem(String term) {
         return inventoryItemsMap.get(term);
+    }
+
+    @Override
+    public Map<String, InventoryItem> getAllItems() {
+        return Collections.unmodifiableMap(inventoryItemsMap);
     }
 
     @Override

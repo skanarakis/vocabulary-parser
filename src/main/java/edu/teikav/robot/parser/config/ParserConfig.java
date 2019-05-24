@@ -1,6 +1,8 @@
 package edu.teikav.robot.parser.config;
 
 import edu.teikav.robot.parser.domain.PublisherDocumentInput;
+import edu.teikav.robot.parser.services.InMemoryInventoryServiceImpl;
+import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import edu.teikav.robot.parser.services.YAMLPublisherSpecRegistryImpl;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -36,6 +38,11 @@ public class ParserConfig {
     PublisherSpecificationRegistry registry() {
         Yaml yaml = new Yaml(new Constructor(PublisherDocumentInput.class));
         return new YAMLPublisherSpecRegistryImpl(yaml);
+    }
+
+    @Bean
+    InventoryService inventoryService() {
+        return new InMemoryInventoryServiceImpl();
     }
 
 }
