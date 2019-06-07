@@ -162,6 +162,30 @@ public class VocabularyRecognizerIT {
         Assertions.assertThat(inventoryService.isInventoried("shine")).isTrue();
     }
 
+    @Test
+    public void inventoriesVocabularyForThirdPublisherComplete() throws IOException, XMLStreamException {
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
+                "OurW-2b-complete.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+
+        // Make the first pass
+        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
+        parser.parse(source, vocabularyIdentifier);
+
+        // Need to reset input stream
+        inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
+                "OurW-2b-complete.rtf");
+        source = new RtfStreamSource(inputStream);
+
+        // Make the second pass
+        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
+                inventoryService, secondPassOutputStream);
+        parser.parse(source, vocabularySemanticsTokenizer);
+
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(30);
+    }
+
     @TestConfiguration
     static class VocabularyRecognizerTestConfiguration {
 

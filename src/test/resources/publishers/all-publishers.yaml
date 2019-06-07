@@ -164,8 +164,9 @@ vocabularyStructureSpecs:
     tokenTypeSpecs:
       language: ENGLISH
       potentiallyLast: false
-      potentiallySplit: false
+      potentiallySplit: true
       potentiallyComposite: false
+      pattern: "^[a-zA-Z0-9\\s\\(\\)\\\\.]*$"
   - tokenType: GRAMMAR_TYPE
     rtfSpecs:
       textPoints: 10
@@ -179,7 +180,13 @@ vocabularyStructureSpecs:
       language: ENGLISH
       potentiallyLast: false
       potentiallySplit: false
-      potentiallyComposite: false
+      potentiallyComposite: true
+      pattern: "(^\\(v\\)|^\\(n\\)|^\\(phr v\\)|^\\(adj\\)|^\\(adv\\)).*"
+      compositeSpecs:
+        parts:
+          - "GRAMMAR_TYPE"
+          - "VERB_PARTICIPLES"
+        splitPattern: "\\s\\("
   - tokenType: TRANSLATION
     rtfSpecs:
       textPoints: 10
@@ -194,7 +201,7 @@ vocabularyStructureSpecs:
       potentiallyLast: false
       potentiallySplit: false
       potentiallyComposite: false
-      pattern: "[\\s\\p{InGreek}]+"
+      pattern: "[\\(\\)\\\\.\\s\\p{InGreek}]+"
   - tokenType: EXAMPLE
     rtfSpecs:
       textPoints: 10
@@ -207,13 +214,50 @@ vocabularyStructureSpecs:
     tokenTypeSpecs:
       language: ENGLISH
       potentiallyLast: true
+      potentiallySplit: true
+      potentiallyComposite: false
+  - tokenType: DERIVATIVES
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: true
       potentiallySplit: false
       potentiallyComposite: false
+      pattern: "Der:[\\sa-zA-Z\\(\\)]+"
+  - tokenType: OPPOSITES
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: true
+      potentiallySplit: false
+      potentiallyComposite: false
+      pattern: "Opp:[\\sa-zA-Z\\(\\)]+"
 vocabularyStructureTransitions:
   - "TERM -> GRAMMAR_TYPE"
+  - "TERM -> TRANSLATION"
   - "GRAMMAR_TYPE -> TRANSLATION"
   - "TRANSLATION -> EXAMPLE"
+  - "EXAMPLE -> OPPOSITES"
+  - "EXAMPLE -> DERIVATIVES"
   - "EXAMPLE -> TERM"
+  - "DERIVATIVES -> OPPOSITES"
+  - "OPPOSITES -> DERIVATIVES"
+  - "DERIVATIVES -> TERM"
+  - "OPPOSITES -> TERM"
 vocabularySpeechPartMappings:
   (n): NOUN
   (v): VERB

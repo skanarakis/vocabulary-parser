@@ -6,13 +6,13 @@ import java.util.Map;
 
 public interface InventoryService {
 
+    void save(InventoryItem item);
+
     InventoryItem getItem(String term);
 
     Map<String, InventoryItem> getAllItems();
 
     boolean isInventoried(String term);
-
-    void save(InventoryItem item);
 
     int inventorySize();
 }

@@ -10,6 +10,7 @@ public class InventoryItemDTO {
     private String translation;
     private String example;
     private String derivative;
+    private String opposite;
     private String pronunciation;
     private String verbParticiples;
 
@@ -26,6 +27,7 @@ public class InventoryItemDTO {
         translation = item.getTranslation();
         example = item.getExample();
         derivative = item.getDerivative();
+        opposite = item.getOpposite();
         pronunciation = item.getPronunciation();
         verbParticiples = item.getVerbParticiples();
     }
@@ -61,6 +63,10 @@ public class InventoryItemDTO {
     public void setDerivative(String derivative) {
         this.derivative = derivative;
     }
+
+    public String getOpposite() { return opposite; }
+
+    public void setOpposite(String opposite) { this.opposite = opposite; }
 
     public String getPronunciation() {
         return pronunciation;

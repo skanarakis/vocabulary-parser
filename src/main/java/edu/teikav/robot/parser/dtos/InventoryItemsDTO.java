@@ -16,8 +16,7 @@ public class InventoryItemsDTO {
 
         Objects.requireNonNull(items, "Items argument passed for InventoryItemsDTO constructor is null");
         vocabularyInventory = new HashMap<>();
-        items.entrySet().stream()
-                .forEach(entry ->  vocabularyInventory.put(entry.getKey(), new InventoryItemDTO(entry.getValue())));
+        items.forEach((key, value) -> vocabularyInventory.put(key, new InventoryItemDTO(value)));
     }
 
     public Map<String, InventoryItemDTO> getVocabularyInventory() {

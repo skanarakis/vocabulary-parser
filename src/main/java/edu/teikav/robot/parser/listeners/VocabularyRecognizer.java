@@ -1,6 +1,8 @@
 package edu.teikav.robot.parser.listeners;
 
-import edu.teikav.robot.parser.domain.*;
+import edu.teikav.robot.parser.domain.InventoryItem;
+import edu.teikav.robot.parser.domain.PublisherSpecification;
+import edu.teikav.robot.parser.domain.SpeechPart;
 import edu.teikav.robot.parser.exceptions.InvalidGraphException;
 import edu.teikav.robot.parser.exceptions.NoMatchingVertexException;
 import edu.teikav.robot.parser.exceptions.RecognizerProcessingException;
@@ -26,7 +28,7 @@ import java.util.regex.Pattern;
 public class VocabularyRecognizer extends TokenEmitter {
 
     private Logger logger = LoggerFactory.getLogger(VocabularyRecognizer.class);
-    private static final String NEW_INVENTORY_ITEM_DEBUG_MESSAGE = "New InventoryItem object with value {}";
+    private static final String NEW_INVENTORY_ITEM_DEBUG_MESSAGE = "Constructing new inventory item object with value [{}]";
     private static final String SPACE = " ";
 
     private PublisherSpecificationRegistry registry;
@@ -61,6 +63,7 @@ public class VocabularyRecognizer extends TokenEmitter {
         itemUpdateSnippets.put("PRONUNCIATION", (grammarContext, item, value) -> item.setPronunciation(value));
         itemUpdateSnippets.put("EXAMPLE", (grammarContext, item, value) -> item.setExample(value));
         itemUpdateSnippets.put("DERIVATIVES", (grammarContext, item, value) -> item.setDerivative(value));
+        itemUpdateSnippets.put("OPPOSITES", (grammarContext, item, value) -> item.setOpposite(value));
         itemUpdateSnippets.put("VERB_PARTICIPLES", (grammarContext, item, value) -> item.setVerbParticiples(value));
     }
 
@@ -72,7 +75,7 @@ public class VocabularyRecognizer extends TokenEmitter {
         super(outputStream);
 
         activeVocabularyPart = "TERM";
-        currentToken = new VocabularyToken();
+        //currentToken = new VocabularyToken();
         this.inventoryService = inventoryService;
         this.registry = registry;
     }
@@ -87,7 +90,8 @@ public class VocabularyRecognizer extends TokenEmitter {
     @Override
     public void processToken(String tokenStringValue)
     {
-        logger.debug("----\tProcessing token {} - Active Vocabulary part : {}", tokenStringValue, activeVocabularyPart);
+        logger.debug("\n*********\nProcessing token [{}]\nActive Vocabulary part : {}\n*********",
+                tokenStringValue, activeVocabularyPart);
 
         if (this.activeSpec == null) {
             createRecognitionEnvironment();
@@ -105,6 +109,11 @@ public class VocabularyRecognizer extends TokenEmitter {
         Optional<PublisherSpecification> optSpec = this.registry.getActiveSpec();
         activeSpec = optSpec.orElseThrow(UnrecognizedPublisherException::new);
 
+        if (activeSpec.getPublisher() != null) {
+            logger.info("Found Publisher with name '{}'", activeSpec.getPublisher().getName());
+        }
+
+        // TODO: Move this validation when registering the graph with publisher specs
         if (!activeSpec.containsRootVocabularyToken("TERM")) {
             throw new InvalidGraphException("Grammar Graph must have a TERM vertex");
         }
@@ -112,33 +121,10 @@ public class VocabularyRecognizer extends TokenEmitter {
         activeVocabularyPart = "TERM";
     }
 
-    private String findNextVocabularyPart(String tokenStringValue) {
-        List<String> nextVocabularyParts = activeSpec.getValidTransitionsFor(activeVocabularyPart);
-        logger.debug("Valid transitions for {} : {}", activeVocabularyPart, nextVocabularyParts);
-        if (nextVocabularyParts.size() == 1) {
-            String newPart = nextVocabularyParts.get(0);
-            logger.debug("New Vertex is {}", newPart);
-            return newPart;
-        }
-        for (String newPart : nextVocabularyParts) {
-            Pattern pattern = Pattern.compile(activeSpec.getTermPattern(newPart));
-            if (pattern.matcher(tokenStringValue).matches()) {
-                logger.debug("Matched pattern {} for token {} (:{}). New Vertex is {}",
-                        activeSpec.getTermPattern(newPart), tokenStringValue, newPart, newPart);
-                return newPart;
-            } else {
-                logger.debug("No match for pattern {} for token {} (:{})", activeSpec.getTermPattern(newPart),
-                        tokenStringValue, newPart);
-            }
-        }
-        logger.debug("No new Vertex. Keep the same {}", activeVocabularyPart);
-        return activeVocabularyPart;
-    }
-
     private void handleFirstStreamedToken(String tokenStringValue) {
         if (activeSpec.isTermPotentiallySplit("TERM")) {
             logger.debug("Caching TERM segment {}", tokenStringValue);
-            cachedPart.append(SPACE).append(tokenStringValue);
+            cachedPart.append(tokenStringValue);
         } else {
             currentItem = new InventoryItem(tokenStringValue);
             logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, tokenStringValue);
@@ -154,17 +140,43 @@ public class VocabularyRecognizer extends TokenEmitter {
         } else {
             handleNormalVertexTransition(tokenStringValue);
         }
-        checkForPotentiallyLastPart();
+        checkForPotentiallyLastPart(activeVocabularyPart);
+    }
+
+    private String findNextVocabularyPart(String tokenStringValue) {
+        List<String> expectedTransitions = activeSpec.getValidTransitionsFor(activeVocabularyPart);
+        logger.debug("Valid transitions for {} : {}", activeVocabularyPart, expectedTransitions);
+        if (expectedTransitions.size() == 1) {
+            String nextPart = expectedTransitions.get(0);
+            logger.debug("Next vocabulary part found: {}", nextPart);
+            return nextPart;
+        }
+        for (String transition : expectedTransitions) {
+            Pattern pattern = Pattern.compile(activeSpec.getTermPattern(transition));
+            if (pattern.matcher(tokenStringValue).matches()) {
+                logger.debug("Matched pattern [{}] for token [{}]. New vocabulary part found: [{}]",
+                        activeSpec.getTermPattern(transition), tokenStringValue, transition);
+                return transition;
+            } else {
+                logger.debug("No match for pattern [{}] for token [{}] (Checking transition [{}])",
+                        activeSpec.getTermPattern(transition), tokenStringValue, transition);
+            }
+        }
+        logger.debug("No new vocabulary part found. Keep the same: {}", activeVocabularyPart);
+        return activeVocabularyPart;
     }
 
     private void handleReEntrantVertexTransition(String tokenStringValue) {
-        if (activeSpec.isTermPotentiallySplit(activeVocabularyPart)) {
-            cachedPart.append(SPACE).append(tokenStringValue);
-            logger.debug("{} is split. Caching current segment {}. Complete cache is '{}'",
-                    activeVocabularyPart, tokenStringValue, cachedPart.toString());
-        } else {
-            throw new NoMatchingVertexException("No matching vertex found and active vertex cannot hold partial segments");
+
+        if (!activeSpec.isTermPotentiallySplit(activeVocabularyPart)) {
+            throw new NoMatchingVertexException(
+                    String.format("No matching next vocabulary part found and specs for [%s] indicate it cannot be split",
+                            activeVocabularyPart));
         }
+
+        cachedPart.append(SPACE).append(tokenStringValue);
+        logger.debug("{} is split. Caching current segment {}. Complete cache is '{}'",
+                    activeVocabularyPart, tokenStringValue, cachedPart.toString());
     }
 
     private void handleNormalVertexTransition(String tokenStringValue) {
@@ -172,8 +184,8 @@ public class VocabularyRecognizer extends TokenEmitter {
             handleCachedData();
         }
         if (activeSpec.isTermPotentiallySplit(activeVocabularyPart)) {
-            cachedPart.append(SPACE).append(tokenStringValue);
-            logger.debug("{} might be split. Caching current segment {}. Complete cache is '{}'",
+            cachedPart.append(tokenStringValue);
+            logger.debug("[{}] might be split. Caching current segment [{}]. Complete cache is [{}]",
                     activeVocabularyPart, tokenStringValue, cachedPart.toString());
         } else {
             processVocabularyPart(tokenStringValue);
@@ -181,10 +193,6 @@ public class VocabularyRecognizer extends TokenEmitter {
     }
 
     private void processVocabularyPart(String tokenStringValue) {
-        logger.debug("*** Entered PROCESS with activeVocabularyPart: {}, previousVocabularyPart: {}, cache: '{}'",
-                activeVocabularyPart, previousVocabularyPart, cachedPart.toString());
-
-        currentToken.setTokenType(VocabularyTokenType.valueOf(activeVocabularyPart));
 
         if (activeVocabularyPart.equals("TERM")) {
             currentItem = new InventoryItem(tokenStringValue);
@@ -204,19 +212,19 @@ public class VocabularyRecognizer extends TokenEmitter {
                 snippet.updateItem(activeSpec, currentItem, tokenStringValue);
             }
         }
-        cachedPart.delete(0, cachedPart.length());
     }
 
     private void handleCachedData() {
         String cachedPartString = cachedPart.toString().trim();
-        logger.debug("Time to handle cache {} for ({})", cachedPartString, previousVocabularyPart);
+        logger.debug("Time to handle cache [{}] for [{}]", cachedPartString, previousVocabularyPart);
         if (previousVocabularyPart.equals("TERM")) {
             currentItem = new InventoryItem(cachedPartString);
             logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, cachedPartString);
         } else {
             ItemUpdateSnippet snippet = itemUpdateSnippets.get(previousVocabularyPart);
             snippet.updateItem(activeSpec, currentItem, cachedPartString);
-            logger.debug("Updating InventoryItem object with value {}", cachedPartString);
+            logger.debug("Updating InventoryItem [{}] with value {}", currentItem.getTerm(), cachedPartString);
+            checkForPotentiallyLastPart(previousVocabularyPart);
         }
         cachedPart.delete(0, cachedPart.length());
     }
@@ -236,12 +244,9 @@ public class VocabularyRecognizer extends TokenEmitter {
         }
     }
 
-    private void checkForPotentiallyLastPart() {
-        if (activeSpec.isTermPotentiallyLast(activeVocabularyPart)) {
+    private void checkForPotentiallyLastPart(String part) {
+        if (activeSpec.isTermPotentiallyLast(part)) {
             inventoryService.save(currentItem);
-            logger.info("Inventory saving for {}", currentItem);
         }
     }
-
-
 }

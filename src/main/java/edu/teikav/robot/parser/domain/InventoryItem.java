@@ -10,10 +10,22 @@ public class InventoryItem {
     private String example;
     private String pronunciation;
     private String derivative;
+    private String opposite;
     private String verbParticiples;
 
     public InventoryItem(String term) {
         this.term = term;
+    }
+
+    public InventoryItem(InventoryItem item) {
+        this.term = item.getTerm();
+        this.termType = item.getTermType();
+        this.translation = item.getTranslation();
+        this.example = item.getExample();
+        this.pronunciation = item.getPronunciation();
+        this.derivative = item.getDerivative();
+        this.opposite = item.getOpposite();
+        this.verbParticiples = item.getVerbParticiples();
     }
 
     public void setTermType(SpeechPart termType) {
@@ -60,6 +72,10 @@ public class InventoryItem {
         this.derivative = derivative;
     }
 
+    public String getOpposite() { return opposite; }
+
+    public void setOpposite(String opposite) { this.opposite = opposite; }
+
     public String getVerbParticiples() {
         return verbParticiples;
     }
@@ -79,6 +95,7 @@ public class InventoryItem {
                 Objects.equals(example, that.example) &&
                 Objects.equals(pronunciation, that.pronunciation) &&
                 Objects.equals(derivative, that.derivative) &&
+                Objects.equals(opposite, that.opposite) &&
                 Objects.equals(verbParticiples, that.verbParticiples);
     }
 
@@ -86,7 +103,7 @@ public class InventoryItem {
     public int hashCode() {
 
         return Objects.hash(term, termType.toString(), translation, example,
-                pronunciation, derivative, verbParticiples);
+                pronunciation, derivative, opposite, verbParticiples);
     }
 
     @Override
@@ -103,6 +120,9 @@ public class InventoryItem {
         }
         if (derivative != null && derivative.length() > 0) {
             sb.append(", derivative='").append(derivative).append('\'');
+        }
+        if (opposite != null && opposite.length() > 0) {
+            sb.append(", opposite='").append(opposite).append('\'');
         }
         if (verbParticiples != null && verbParticiples.length() > 0) {
             sb.append(", verbParticiples='").append(verbParticiples).append('\'');

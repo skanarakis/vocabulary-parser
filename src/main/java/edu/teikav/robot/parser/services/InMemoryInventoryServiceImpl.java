@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class InMemoryInventoryServiceImpl implements InventoryService {
 
@@ -31,12 +32,21 @@ public class InMemoryInventoryServiceImpl implements InventoryService {
 
     @Override
     public void save(InventoryItem item) {
-        InventoryItem previousItem = inventoryItemsMap.putIfAbsent(item.getTerm(), item);
-        if (previousItem == null) {
-            logger.debug("Saving new Vocabulary Term\n\t{}", item);
+        Objects.requireNonNull(item,"Cannot save inventory item with null input");
+        String term = item.getTerm();
+        InventoryItem existingItem = inventoryItemsMap.putIfAbsent(term, new InventoryItem(item));
+        if (existingItem != null) {
+            // TODO: Currently we only overwrite. We need to update with a smarter way
+            existingItem.setTermType(item.getTermType());
+            existingItem.setTranslation(item.getTranslation());
+            existingItem.setExample(item.getExample());
+            existingItem.setPronunciation(item.getPronunciation());
+            existingItem.setVerbParticiples(item.getVerbParticiples());
+            existingItem.setDerivative(item.getDerivative());
+            existingItem.setOpposite(item.getOpposite());
+            logger.info("INVENTORY: Updating current item [{}]. Updated status\n{}", term, inventoryItemsMap.get(term));
         } else {
-            logger.debug("Updating Vocabulary Term\n\t{}\nwith\n\t{}", previousItem, item);
-            // TODO: Update existing item
+            logger.info("INVENTORY: Storing new item [{}] with status\n{}", term, item);
         }
     }
 
