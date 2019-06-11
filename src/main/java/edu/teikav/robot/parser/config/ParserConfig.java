@@ -14,13 +14,20 @@ import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static edu.teikav.robot.parser.ParserStaticConstants.*;
 
 @Configuration
 @Profile("dev")
 public class ParserConfig {
+
+    public ParserConfig() throws IOException {
+        Files.createDirectories(Paths.get(TEST_OUTPUT_XML_DOCS_PATH));
+    }
 
     @Bean
     @Qualifier("FirstPassOutputStream")
