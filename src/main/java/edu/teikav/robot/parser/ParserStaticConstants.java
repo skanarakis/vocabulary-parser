@@ -15,9 +15,4 @@ public class ParserStaticConstants {
     public static final String TEST_IMAGES_PATH = INTEGRATION_TEST_RESOURCES_PATH + "/textImages/";
     public static final String TEST_INPUT_RTF_DOCS_PATH = INTEGRATION_TEST_RESOURCES_PATH + "/inputRTFDocs/";
     public static final String TEST_OUTPUT_XML_DOCS_PATH = INTEGRATION_TEST_RESOURCES_PATH + "/outputXMLDocs/";
-
-    public static final String FIRST_PASS_OUTPUT_XML_FILENAME = "output-first-pass.xml";
-    public static final String FIRST_PASS_TEST_OUTPUT_XML_FILENAME = "test-output-first-pass.xml";
-    public static final String SECOND_PASS_OUTPUT_XML_FILENAME = "output-second-pass.xml";
-    public static final String SECOND_PASS_TEST_OUTPUT_XML_FILENAME = "test-output-second-pass.xml";
 }

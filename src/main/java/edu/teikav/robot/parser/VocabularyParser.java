@@ -4,13 +4,17 @@ import com.rtfparserkit.parser.IRtfParser;
 import com.rtfparserkit.parser.IRtfSource;
 import com.rtfparserkit.parser.RtfStreamSource;
 import com.rtfparserkit.parser.standard.StandardRtfParser;
-import edu.teikav.robot.parser.domain.RtfCallbackHandler;
+import edu.teikav.robot.parser.listeners.PublisherIdentifier;
+import edu.teikav.robot.parser.listeners.VocabularyRecognizer;
+import edu.teikav.robot.parser.listeners.VocabularySeparator;
+import edu.teikav.robot.parser.services.InventoryService;
+import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.*;
 
 @Component
@@ -18,50 +22,43 @@ public class VocabularyParser {
 
     private Logger logger = LoggerFactory.getLogger(VocabularyParser.class);
 
-    private RtfCallbackHandler publisherIdentifier;
-    private RtfCallbackHandler vocabularyRecognizer;
+    private final PublisherSpecificationRegistry registry;
+    private final InventoryService inventoryService;
 
     @Autowired
-    public VocabularyParser(@Qualifier("PublisherIdentifier") RtfCallbackHandler publisherIdentifier,
-                            @Qualifier("VocabularyRecognizer") RtfCallbackHandler vocabularyRecognizer) {
-        this.publisherIdentifier = publisherIdentifier;
-        this.vocabularyRecognizer = vocabularyRecognizer;
+    public VocabularyParser(PublisherSpecificationRegistry registry, InventoryService inventoryService) {
+        this.registry = registry;
+        this.inventoryService = inventoryService;
     }
 
-    public void parseVocabulary(final File vocabularyRtfDoc) throws IOException {
+    public void parseVocabulary(final File vocabularyRtfDoc) throws IOException, XMLStreamException {
 
         if (vocabularyRtfDoc == null) {
             throw new NullPointerException("Input RTF vocabulary document is null");
         }
 
         String docAbsolutePath = vocabularyRtfDoc.getAbsolutePath();
-        IRtfSource rtfSource = newRtfSource(docAbsolutePath);
 
         // Utilizing 3rd party library for RTF
+        IRtfSource rtfSource = newRtfSource(docAbsolutePath);
         IRtfParser parser = new StandardRtfParser();
 
-        // Clear prior state
-        clearInternalState();
+        VocabularySeparator vocabularySeparator = new VocabularySeparator();
+        parser.parse(rtfSource, vocabularySeparator);
 
-        // Make the first pass
+        // Make the first pass to identify publisher
         logger.info("Parser will attempt the first pass - Attempt to identify publisher");
-        parser.parse(rtfSource, publisherIdentifier);
+        PublisherIdentifier publisherIdentifier = new PublisherIdentifier(registry, vocabularySeparator);
+        publisherIdentifier.identifyPublisher();
 
-        // Need to reset input stream
-        rtfSource = newRtfSource(docAbsolutePath);
-
-        // Make the second pass
+        // Make the second pass to recognize vocabulary structure
         logger.info("Parser will attempt the second pass - Attempt to recognize vocabulary");
-        parser.parse(rtfSource, vocabularyRecognizer);
+        VocabularyRecognizer vocabularyRecognizer = new VocabularyRecognizer(registry, inventoryService);
+        vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
     }
 
     private IRtfSource newRtfSource(String absPath) throws FileNotFoundException {
         InputStream rtfStream = new FileInputStream(absPath);
         return new RtfStreamSource(rtfStream);
-    }
-
-    private void clearInternalState() {
-        publisherIdentifier.reset();
-        vocabularyRecognizer.reset();
     }
 }

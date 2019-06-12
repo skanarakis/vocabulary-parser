@@ -14,10 +14,11 @@ import javax.xml.stream.XMLStreamException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public abstract class TokenEmitter implements RtfCallbackHandler {
+public class VocabularySeparator implements RtfCallbackHandler {
 
-    private Logger logger = LoggerFactory.getLogger(TokenEmitter.class);
+    private Logger logger = LoggerFactory.getLogger(VocabularySeparator.class);
 
     private static final String ENTERED_GROUP = "Group Entered";
 
@@ -71,14 +72,24 @@ public abstract class TokenEmitter implements RtfCallbackHandler {
     // Use delegation to preserve the XML output
     private RtfDumpListener rtfDumpListener;
 
-    TokenEmitter(OutputStream outputStream) throws XMLStreamException {
-        this.rtfDumpListener = new RtfDumpListener(outputStream);
+    List<VocabularyToken> vocPartsStream;
+
+    public VocabularySeparator() throws XMLStreamException {
+        this(null);
+    }
+
+
+    VocabularySeparator(OutputStream outputStream) throws XMLStreamException {
+        if (outputStream != null) {
+            this.rtfDumpListener = new RtfDumpListener(outputStream);
+        }
         this.currentToken = new VocabularyToken();
         this.colorMap = new HashMap<>();
         colorHolder = new FontColor();
 
         nestedGroupCommandsQueue = new ArrayDeque<>();
         rtfCommandsMap = new HashMap<>();
+        vocPartsStream = new LinkedList<>();
     }
 
     // ********************************
@@ -86,21 +97,31 @@ public abstract class TokenEmitter implements RtfCallbackHandler {
     // Used only to output the XML file
     // ********************************
     @Override
-    public void processDocumentStart() { rtfDumpListener.processDocumentStart(); }
+    public void processDocumentStart() {
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processDocumentStart();
+        }
+    }
 
     @Override
     public void processDocumentEnd() {
-        rtfDumpListener.processDocumentEnd();
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processDocumentEnd();
+        }
     }
 
     @Override
     public void processCharacterBytes(byte[] data) {
-        rtfDumpListener.processCharacterBytes(data);
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processCharacterBytes(data);
+        }
     }
 
     @Override
     public void processBinaryBytes(byte[] data) {
-        rtfDumpListener.processBinaryBytes(data);
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processBinaryBytes(data);
+        }
     }
 
     // ********************************
@@ -109,13 +130,17 @@ public abstract class TokenEmitter implements RtfCallbackHandler {
 
     @Override
     public void processGroupStart() {
-        rtfDumpListener.processGroupStart();
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processGroupStart();
+        }
         nestedGroupCommandsQueue.addLast(ENTERED_GROUP);
     }
 
     @Override
     public void processGroupEnd() {
-        rtfDumpListener.processGroupEnd();
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processGroupEnd();
+        }
         nestedGroupCommandsQueue.removeLast();
         if (0 < rtfCommandsMap.size()) {
             checkIfStillInScope(nestedGroupCommandsQueue.size());
@@ -125,7 +150,10 @@ public abstract class TokenEmitter implements RtfCallbackHandler {
     @Override
     public void processCommand(Command command, int parameter, boolean hasParameter, boolean optional)
     {
-        rtfDumpListener.processCommand(command, parameter, hasParameter, optional);
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processCommand(command, parameter, hasParameter, optional);
+        }
+
         // Search for the commands we are currently interested in
         String commandName = command.getCommandName();
         switch (commandName) {
@@ -215,7 +243,9 @@ public abstract class TokenEmitter implements RtfCallbackHandler {
     @Override
     public void processString(String token) {
 
-        rtfDumpListener.processString(token);
+        if (rtfDumpListener != null) {
+            rtfDumpListener.processString(token);
+        }
 
         if (token == null) {
             logger.warn("Null token string. Ignoring it");
@@ -230,7 +260,8 @@ public abstract class TokenEmitter implements RtfCallbackHandler {
         if (isImportantToken(trimmedToken)) {
             String cleanToken = TokenUtils.removeNumericDigitsBeforeToken(trimmedToken);
             logger.debug("Processing token {}", cleanToken);
-            processToken(cleanToken);
+            currentToken.setValue(cleanToken);
+            vocPartsStream.add(currentToken.clone());
         } else {
             logger.debug("Ignoring unimportant token {}", trimmedToken);
         }
@@ -241,9 +272,16 @@ public abstract class TokenEmitter implements RtfCallbackHandler {
         colorMap.clear();
         nextColorIndex = 1;
         currentToken = new VocabularyToken();
+        vocPartsStream.clear();
     }
 
-    protected abstract void processToken(String token);
+    public Stream<VocabularyToken> streamOfVocParts() {
+        return vocPartsStream.stream();
+    }
+
+    public Stream<String> streamOfVocPartsValues() {
+        return vocPartsStream.stream().map(VocabularyToken::getValue);
+    }
 
     private void checkIfStillInScope(int currentNestingDepth) {
         List<Map.Entry<String, CommandHelperAttributes>> commandsInScope = rtfCommandsMap.entrySet().stream()

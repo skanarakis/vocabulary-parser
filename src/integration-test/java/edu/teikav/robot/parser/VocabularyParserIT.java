@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +36,7 @@ public class VocabularyParserIT {
     PublisherSpecificationRegistry registry;
 
     @Test
-    public void parseVocabularyForTwoPublishers() throws IOException {
+    public void parseVocabularyForTwoPublishers() throws IOException, XMLStreamException {
         prepareRegistry();
 
         logger.info("parseVocabularyForFirstPublisher called ******************************");

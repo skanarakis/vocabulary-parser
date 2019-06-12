@@ -1,6 +1,5 @@
 package edu.teikav.robot.parser.listeners;
 
-import com.rtfparserkit.parser.IRtfListener;
 import com.rtfparserkit.parser.IRtfParser;
 import com.rtfparserkit.parser.IRtfSource;
 import com.rtfparserkit.parser.RtfStreamSource;
@@ -19,12 +18,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -35,25 +28,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static edu.teikav.robot.parser.ParserStaticConstants.*;
+import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
+import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
 
 @RunWith(SpringRunner.class)
 @Category(IntegrationTest.class)
 public class VocabularyRecognizerIT {
 
-    private Logger logger = LoggerFactory.getLogger(VocabularyRecognizerIT.class);
-
     private static PublisherSpecificationRegistry registry;
 
     private InventoryService inventoryService;
-
-    @Autowired
-    @Qualifier("FirstPassOutputStream")
-    private OutputStream firstPassOutputStream;
-
-    @Autowired
-    @Qualifier("SecondPassOutputStream")
-    private OutputStream secondPassOutputStream;
 
     @BeforeClass
     public static void preloadRegistry() {
@@ -72,24 +56,26 @@ public class VocabularyRecognizerIT {
 
     @Test
     public void inventoriesVocabularyForFirstPublisher() throws IOException, XMLStreamException {
+
+        OutputStream outputStream = FileUtils
+                .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "first-pub-voc-separation.xml");
+
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
                 "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
 
-        // Make the first pass
-        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
-        parser.parse(source, vocabularyIdentifier);
+        // Separate vocabulary parts
+        VocabularySeparator vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
 
-        // Need to reset input stream
-        inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
-                "sample-vocabulary-01.rtf");
-        source = new RtfStreamSource(inputStream);
+        // Make the first pass to identify publisher
+        PublisherIdentifier publisherIdentifier = new PublisherIdentifier(registry, vocabularySeparator);
+        publisherIdentifier.identifyPublisher();
 
-        // Make the second pass
-        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
-                inventoryService, secondPassOutputStream);
-        parser.parse(source, vocabularySemanticsTokenizer);
+        // Make the second pass to recognize vocabulary structure
+        VocabularyRecognizer vocabularyRecognizer = new VocabularyRecognizer(registry, inventoryService);
+        vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
 
         Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(4);
         Assertions.assertThat(inventoryService.isInventoried("frog")).isTrue();
@@ -104,24 +90,26 @@ public class VocabularyRecognizerIT {
 
     @Test
     public void inventoriesVocabularyForSecondPublisher() throws IOException, XMLStreamException {
+
+        OutputStream outputStream = FileUtils
+                .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "2nd-pub-voc-separation.xml");
+
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
                 "sample-vocabulary-02.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
 
-        // Make the first pass
-        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
-        parser.parse(source, vocabularyIdentifier);
+        // Separate vocabulary parts
+        VocabularySeparator vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
 
-        // Need to reset input stream
-        inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
-                "sample-vocabulary-02.rtf");
-        source = new RtfStreamSource(inputStream);
+        // Make the first pass to identify publisher
+        PublisherIdentifier publisherIdentifier = new PublisherIdentifier(registry, vocabularySeparator);
+        publisherIdentifier.identifyPublisher();
 
-        // Make the second pass
-        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
-                inventoryService, secondPassOutputStream);
-        parser.parse(source, vocabularySemanticsTokenizer);
+        // Make the second pass to recognize vocabulary structure
+        VocabularyRecognizer vocabularyRecognizer = new VocabularyRecognizer(registry, inventoryService);
+        vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
 
         Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(5);
         Assertions.assertThat(inventoryService.isInventoried("incandescent")).isTrue();
@@ -133,24 +121,26 @@ public class VocabularyRecognizerIT {
 
     @Test
     public void inventoriesVocabularyForThirdPublisher() throws IOException, XMLStreamException {
+
+        OutputStream outputStream = FileUtils
+                .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "3rd-pub-voc-separation.xml");
+
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
                 "OurW-2b.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
 
-        // Make the first pass
-        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
-        parser.parse(source, vocabularyIdentifier);
+        // Separate vocabulary parts
+        VocabularySeparator vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
 
-        // Need to reset input stream
-        inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
-                "OurW-2b.rtf");
-        source = new RtfStreamSource(inputStream);
+        // Make the first pass to identify publisher
+        PublisherIdentifier publisherIdentifier = new PublisherIdentifier(registry, vocabularySeparator);
+        publisherIdentifier.identifyPublisher();
 
-        // Make the second pass
-        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
-                inventoryService, secondPassOutputStream);
-        parser.parse(source, vocabularySemanticsTokenizer);
+        // Make the second pass to recognize vocabulary structure
+        VocabularyRecognizer vocabularyRecognizer = new VocabularyRecognizer(registry, inventoryService);
+        vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
 
         Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(7);
         Assertions.assertThat(inventoryService.isInventoried("neighbour")).isTrue();
@@ -164,44 +154,28 @@ public class VocabularyRecognizerIT {
 
     @Test
     public void inventoriesVocabularyForThirdPublisherComplete() throws IOException, XMLStreamException {
+
+        OutputStream outputStream = FileUtils
+                .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "3rd-pub-complete-voc-separation.xml");
+
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
                 "OurW-2b-complete.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
 
-        // Make the first pass
-        IRtfListener vocabularyIdentifier = new PublisherIdentifier(registry, firstPassOutputStream);
-        parser.parse(source, vocabularyIdentifier);
+        // Separate vocabulary parts
+        VocabularySeparator vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
 
-        // Need to reset input stream
-        inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
-                "OurW-2b-complete.rtf");
-        source = new RtfStreamSource(inputStream);
+        // Make the first pass to identify publisher
+        PublisherIdentifier publisherIdentifier = new PublisherIdentifier(registry, vocabularySeparator);
+        publisherIdentifier.identifyPublisher();
 
-        // Make the second pass
-        IRtfListener vocabularySemanticsTokenizer = new VocabularyRecognizer(registry,
-                inventoryService, secondPassOutputStream);
-        parser.parse(source, vocabularySemanticsTokenizer);
+        // Make the second pass to recognize vocabulary structure
+        VocabularyRecognizer vocabularyRecognizer = new VocabularyRecognizer(registry, inventoryService);
+        vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
 
         Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(30);
-    }
-
-    @TestConfiguration
-    static class VocabularyRecognizerTestConfiguration {
-
-        @Bean
-        @Qualifier("FirstPassOutputStream")
-        OutputStream firstPassOutputStream() throws IOException {
-            return FileUtils.getOutputStream(TEST_OUTPUT_XML_DOCS_PATH +
-                    FIRST_PASS_TEST_OUTPUT_XML_FILENAME);
-        }
-
-        @Bean
-        @Qualifier("SecondPassOutputStream")
-        OutputStream secondPassOutputStream() throws IOException {
-            return FileUtils.getOutputStream(TEST_OUTPUT_XML_DOCS_PATH +
-                    SECOND_PASS_TEST_OUTPUT_XML_FILENAME);
-        }
     }
 }
 

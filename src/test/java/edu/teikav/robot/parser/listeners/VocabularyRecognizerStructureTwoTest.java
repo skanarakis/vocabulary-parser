@@ -13,12 +13,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import javax.xml.stream.XMLStreamException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -31,9 +29,6 @@ public class VocabularyRecognizerStructureTwoTest {
 
     @Mock
     private InventoryService inventoryService;
-
-    @Mock
-    private OutputStream outputStream;
 
     @BeforeClass
     public static void init() {
@@ -92,8 +87,8 @@ public class VocabularyRecognizerStructureTwoTest {
     }
 
     @Before
-    public void setup() throws XMLStreamException {
-        recognizer = new VocabularyRecognizer(registry, inventoryService, outputStream);
+    public void setup() {
+        recognizer = new VocabularyRecognizer(registry, inventoryService);
     }
 
     @Test
@@ -105,9 +100,9 @@ public class VocabularyRecognizerStructureTwoTest {
         String termExample = "I like rowing with my new rowing boat!!";
         String termDerivative = "Der: its derivative";
 
-        List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample, termDerivative);
+        Stream<String> streamOfTokens = Stream.of(term, noun, termTranslation, termExample, termDerivative);
 
-        tokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         InventoryItem item = new InventoryItem(term);
         item.setTermType(SpeechPart.NOUN);
@@ -144,12 +139,12 @@ public class VocabularyRecognizerStructureTwoTest {
         String term4Example = "adjective 2 example";
         String term4Derivation = "Der: derivation four";
 
-        List<String> tokens = Arrays.asList(term, termTranslation, termExample, termDerivation,
+        Stream<String> streamOfTokens = Stream.of(term, termTranslation, termExample, termDerivation,
                 term2, term2Translation, term2Example,
                 term3, verb, term3Translation, term3Example,
                 term4, adjective, term4Translation, term4Example, term4Derivation);
 
-        tokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
         // 4 vocabulary items, 6 actual saves
         Mockito.verify(inventoryService, Mockito.times(6))
                 .save(any(InventoryItem.class));
@@ -158,7 +153,7 @@ public class VocabularyRecognizerStructureTwoTest {
     @Test
     public void acceptStreamOfTermsWithMixedRules_TestA() {
 
-        List<String> streamOfTokens = Arrays.asList(
+        Stream<String> streamOfTokens = Stream.of(
                 "configure", "(v)", "ρυθμίζω", "System was properly configured",
                 "lighthouse", "(n)", "φάρος", "There was light at the top of the lighthouse",
                 "mean", "(v) (past & past part: meant)", "εννοώ", "What do you mean?",
@@ -172,7 +167,7 @@ public class VocabularyRecognizerStructureTwoTest {
                 "come over", "(phr v)", "επισκέπτομαι, περνάω να δω κάποιον", "My brother came over to my house"
         );
 
-        streamOfTokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         Mockito.verify(inventoryService, Mockito.times(13))
                 .save(any(InventoryItem.class));
@@ -181,13 +176,13 @@ public class VocabularyRecognizerStructureTwoTest {
     @Test
     public void acceptStreamOfTermsWithMixedRules_TestB() {
 
-        List<String> streamOfTokens = Arrays.asList(
+        Stream<String> streamOfTokens = Stream.of(
                 "termA", "(v)", "πρώτος όρος", "Term A Example",
                 "termB", "(n)", "δεύτερος όρος", "Term B Example", "Der: derivative (v)",
                 "(some)", "termC", "(adj)", "τρίτος όρος", "Term C Example"
         );
 
-        streamOfTokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         Mockito.verify(inventoryService, Mockito.times(4))
                 .save(any(InventoryItem.class));

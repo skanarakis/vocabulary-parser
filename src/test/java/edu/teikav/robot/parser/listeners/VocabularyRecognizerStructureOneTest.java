@@ -14,12 +14,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import javax.xml.stream.XMLStreamException;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -32,9 +30,6 @@ public class VocabularyRecognizerStructureOneTest {
 
     @Mock
     private InventoryService inventoryService;
-
-    @Mock
-    private OutputStream outputStream;
 
     @BeforeClass
     public static void init() {
@@ -84,8 +79,8 @@ public class VocabularyRecognizerStructureOneTest {
     }
 
     @Before
-    public void setup() throws XMLStreamException {
-        recognizer = new VocabularyRecognizer(registry, inventoryService, outputStream);
+    public void setup() {
+        recognizer = new VocabularyRecognizer(registry, inventoryService);
     }
 
     @Test
@@ -96,9 +91,9 @@ public class VocabularyRecognizerStructureOneTest {
         String termTranslation = "βάρκα κωπηλασίας";
         String termExample = "I like rowing with my new rowing boat!!";
 
-        List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample);
+        Stream<String> streamOfTokens = Stream.of(term, noun, termTranslation, termExample);
 
-        tokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         InventoryItem item = new InventoryItem(term);
         item.setTermType(SpeechPart.NOUN);
@@ -119,9 +114,9 @@ public class VocabularyRecognizerStructureOneTest {
         String[] partsOfComposite = compositePart.split("\\s\\(");
         Assert.assertEquals(2, partsOfComposite.length);
 
-        List<String> tokens = Arrays.asList(term, compositePart, termTranslation, termExample);
+        Stream<String> streamOfTokens = Stream.of(term, compositePart, termTranslation, termExample);
 
-        tokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         InventoryItem item = new InventoryItem(term);
         item.setTermType(SpeechPart.VERB);
@@ -145,10 +140,10 @@ public class VocabularyRecognizerStructureOneTest {
         String term2Translation = "αποφασίζω";
         String term2Example = "Din't you decide yet?";
 
-        List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample,
+        Stream<String> streamOfTokens = Stream.of(term, noun, termTranslation, termExample,
                 term2, verb, term2Translation, term2Example);
 
-        tokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         Mockito.verify(inventoryService, Mockito.times(2))
                 .save(any(InventoryItem.class));
@@ -166,10 +161,10 @@ public class VocabularyRecognizerStructureOneTest {
         String term2Translation = "αποφασίζω";
         String term2Example = "Didn't you decide yet?";
 
-        List<String> tokens = Arrays.asList(term, noun, termTranslation, termExample,
+        Stream<String> streamOfTokens = Stream.of(term, noun, termTranslation, termExample,
                 term2, term2Translation, term2Example);
 
-        tokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         Mockito.verify(inventoryService, Mockito.times(2))
                 .save(any(InventoryItem.class));
@@ -197,12 +192,12 @@ public class VocabularyRecognizerStructureOneTest {
         String term4Translation = "μετάφραση τέσσερα";
         String term4Example = "adjective 2 example";
 
-        List<String> tokens = Arrays.asList(term, termTranslation, termExample,
+        Stream<String> streamOfTokens = Stream.of(term, termTranslation, termExample,
                 term2, term2Translation, term2Example,
                 term3, verb, term3Translation, term3Example,
                 term4, adjective, term4Translation, term4Example);
 
-        tokens.forEach(recognizer::processToken);
+        recognizer.recognizeVocabulary(streamOfTokens);
 
         Mockito.verify(inventoryService, Mockito.times(4))
                 .save(any(InventoryItem.class));

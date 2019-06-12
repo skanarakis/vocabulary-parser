@@ -11,21 +11,15 @@ import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 
-import javax.xml.stream.XMLStreamException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
-@Component
-@Qualifier("VocabularyRecognizer")
-public class VocabularyRecognizer extends TokenEmitter {
+public class VocabularyRecognizer {
 
     private Logger logger = LoggerFactory.getLogger(VocabularyRecognizer.class);
     private static final String NEW_INVENTORY_ITEM_DEBUG_MESSAGE = "Constructing new inventory item object with value [{}]";
@@ -67,29 +61,17 @@ public class VocabularyRecognizer extends TokenEmitter {
         itemUpdateSnippets.put("VERB_PARTICIPLES", (grammarContext, item, value) -> item.setVerbParticiples(value));
     }
 
-    @Autowired
-    VocabularyRecognizer(PublisherSpecificationRegistry registry, InventoryService inventoryService,
-                         @Qualifier("SecondPassOutputStream") OutputStream outputStream)
-            throws XMLStreamException {
-
-        super(outputStream);
-
+    public VocabularyRecognizer(PublisherSpecificationRegistry registry, InventoryService inventoryService) {
         activeVocabularyPart = "TERM";
-        //currentToken = new VocabularyToken();
         this.inventoryService = inventoryService;
         this.registry = registry;
     }
 
-    @Override
-    public void reset() {
-        logger.info("Resetting {}", this.getClass().getName());
-        this.activeSpec = null;
-        isFirstStreamedToken = true;
+    public void recognizeVocabulary(Stream<String> vocabularyPartsStream) {
+        vocabularyPartsStream.forEach(this::processToken);
     }
 
-    @Override
-    public void processToken(String tokenStringValue)
-    {
+    private void processToken(String tokenStringValue) {
         logger.debug("\n*********\nProcessing token [{}]\nActive Vocabulary part : {}\n*********",
                 tokenStringValue, activeVocabularyPart);
 

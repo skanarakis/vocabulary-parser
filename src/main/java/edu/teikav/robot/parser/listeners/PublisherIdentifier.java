@@ -5,38 +5,29 @@ import edu.teikav.robot.parser.domain.VocabularyToken;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 
-import javax.xml.stream.XMLStreamException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@Component
-@Qualifier("PublisherIdentifier")
-public class PublisherIdentifier extends TokenEmitter {
+public class PublisherIdentifier {
 
     private Logger logger = LoggerFactory.getLogger(PublisherIdentifier.class);
 
     private boolean taskCompleted = false;
 
-    private PublisherSpecificationRegistry registry;
+    private final PublisherSpecificationRegistry registry;
+    private final VocabularySeparator vocabularySeparator;
     private List<VocabularyToken> accumulatedTokens;
 
-    @Autowired
-    PublisherIdentifier(PublisherSpecificationRegistry registry,
-                        @Qualifier("FirstPassOutputStream") OutputStream outputStream) throws XMLStreamException {
-        super(outputStream);
+    public PublisherIdentifier(PublisherSpecificationRegistry registry, VocabularySeparator vocabularySeparator) {
         this.registry = registry;
+        this.vocabularySeparator = vocabularySeparator;
         this.accumulatedTokens = new ArrayList<>();
     }
 
-    @Override
-    public void processToken(final String tokenString) {
+    public void identifyPublisher() {
 
         // In the first pass we attempt to identify a publisher in the Registry
         // So, for every token that is being parsed, we add it in our internal list of tokens
@@ -49,13 +40,14 @@ public class PublisherIdentifier extends TokenEmitter {
         // we will have a hash-code that matches any of the hash-codes stored for publishers in Registry
         // At that point, our work is done (we have identified a publisher) and we can let the parsing continue
         // just to output the XML file for debugging reasons.
-        if (!taskCompleted) {
-            logger.debug("Current Token is \n{}", currentToken);
 
-            // Token value is set here. Other token fields have been populated in the parent abstract listener class
-            currentToken.setValue(tokenString.trim());
+        vocabularySeparator.streamOfVocParts().forEach(this::processPart);
+    }
+
+    private void processPart(VocabularyToken token) {
+        if (!taskCompleted) {
             // Save token to the internal list of tokens participating in the hashing
-            accumulatedTokens.add(currentToken.clone());
+            accumulatedTokens.add(token.clone());
 
             // Calculate new hash code and ask Registry for any matches
             int calculatedHashCode = Objects.hash(accumulatedTokens);
@@ -69,17 +61,5 @@ public class PublisherIdentifier extends TokenEmitter {
                 taskCompleted = true;
             }
         }
-    }
-
-    @Override
-    public void reset() {
-
-        // Resetting the token emitter state with a call to super
-        super.reset();
-
-        logger.info("Resetting {}", this.getClass().getName());
-        taskCompleted = false;
-        accumulatedTokens.clear();
-        registry.setActiveSpec(null);
     }
 }

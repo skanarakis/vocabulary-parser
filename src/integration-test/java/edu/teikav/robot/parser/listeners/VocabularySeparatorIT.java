@@ -20,7 +20,7 @@ import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_
 import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
 
 @Category(IntegrationTest.class)
-public class TokenProcessorIT {
+public class VocabularySeparatorIT {
 
     @Test
     public void processTokenForOurW2bPublisherFormat() throws IOException, XMLStreamException {
@@ -29,13 +29,8 @@ public class TokenProcessorIT {
         IRtfParser parser = new StandardRtfParser();
 
         OutputStream outputStream = getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "test-token-processing-ourW2b.xml");
-        IRtfListener testProcessor = new TokenEmitter(outputStream) {
-            @Override
-            protected void processToken(String token) {
-                // Do nothing
-            }
-        };
-        parser.parse(source, testProcessor);
+        IRtfListener vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
     }
 
     @Test
@@ -44,12 +39,7 @@ public class TokenProcessorIT {
         IRtfSource source = new RtfStreamSource(inputStream);
         IRtfParser parser = new StandardRtfParser();
         OutputStream outputStream = getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "test-token-processing-likeEn.xml");
-        IRtfListener testProcessor = new TokenEmitter(outputStream) {
-            @Override
-            protected void processToken(String token) {
-                // Do nothing
-            }
-        };
-        parser.parse(source, testProcessor);
+        IRtfListener vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
     }
 }
