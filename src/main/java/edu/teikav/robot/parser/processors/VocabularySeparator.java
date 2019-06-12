@@ -1,10 +1,10 @@
-package edu.teikav.robot.parser.listeners;
+package edu.teikav.robot.parser.processors;
 
+import com.rtfparserkit.parser.IRtfListener;
 import com.rtfparserkit.rtf.Command;
 import com.rtfparserkit.utils.RtfDumpListener;
 import edu.teikav.robot.parser.domain.FontColor;
 import edu.teikav.robot.parser.domain.Language;
-import edu.teikav.robot.parser.domain.RtfCallbackHandler;
 import edu.teikav.robot.parser.domain.VocabularyToken;
 import edu.teikav.robot.parser.util.TokenUtils;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class VocabularySeparator implements RtfCallbackHandler {
+public class VocabularySeparator implements IRtfListener {
 
     private Logger logger = LoggerFactory.getLogger(VocabularySeparator.class);
 
@@ -44,7 +44,7 @@ public class VocabularySeparator implements RtfCallbackHandler {
 
     // One instance of this class will be holding information for each consecutive token
     // extracted from RTF document
-    VocabularyToken currentToken;
+    private VocabularyToken currentToken;
 
     private int nextColorIndex = 1;
     private Map<Integer, FontColor> colorMap;
@@ -72,12 +72,11 @@ public class VocabularySeparator implements RtfCallbackHandler {
     // Use delegation to preserve the XML output
     private RtfDumpListener rtfDumpListener;
 
-    List<VocabularyToken> vocPartsStream;
+    private List<VocabularyToken> vocPartsStream;
 
     public VocabularySeparator() throws XMLStreamException {
         this(null);
     }
-
 
     VocabularySeparator(OutputStream outputStream) throws XMLStreamException {
         if (outputStream != null) {
@@ -265,14 +264,6 @@ public class VocabularySeparator implements RtfCallbackHandler {
         } else {
             logger.debug("Ignoring unimportant token {}", trimmedToken);
         }
-    }
-
-    @Override
-    public void reset() {
-        colorMap.clear();
-        nextColorIndex = 1;
-        currentToken = new VocabularyToken();
-        vocPartsStream.clear();
     }
 
     public Stream<VocabularyToken> streamOfVocParts() {

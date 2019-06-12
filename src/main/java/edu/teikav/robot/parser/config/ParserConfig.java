@@ -25,5 +25,4 @@ public class ParserConfig {
     InventoryService inventoryService() {
         return new InMemoryInventoryServiceImpl();
     }
-
 }

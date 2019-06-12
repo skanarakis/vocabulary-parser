@@ -1,4 +1,4 @@
-package edu.teikav.robot.parser.listeners;
+package edu.teikav.robot.parser.processors;
 
 import edu.teikav.robot.parser.domain.PublisherSpecification;
 import edu.teikav.robot.parser.domain.VocabularyToken;
