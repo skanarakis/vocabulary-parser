@@ -40,14 +40,14 @@ public class PublisherRegistryRestControllerTest {
 
     @Test
     public void whenNoPublishers_shouldReturnEmptyList() throws Exception {
-        mockMvc.perform(get("/parser/publishers"))
+        mockMvc.perform(get("/registry/publishers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
     public void whenRegisteringSinglePublisher_shouldReturnIt() throws Exception {
-        mockMvc.perform(post("/parser/publishers")
+        mockMvc.perform(post("/registry/publishers")
                 .contentType("text/plain;charset=UTF-8")
                 .content(
                     "publisher:\n" +
@@ -131,7 +131,7 @@ public class PublisherRegistryRestControllerTest {
                 ))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/parser/publishers"))
+        mockMvc.perform(get("/registry/publishers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].publisher.name", equalTo("Publisher A")))
@@ -143,7 +143,7 @@ public class PublisherRegistryRestControllerTest {
 
     @Test
     public void whenRegisteringTwoPublishers_shouldReturnThemAll() throws Exception {
-        mockMvc.perform(post("/parser/publishers")
+        mockMvc.perform(post("/registry/publishers")
                 .contentType("text/plain;charset=UTF-8")
                 .content(
                         "publisher:\n" +
@@ -227,7 +227,7 @@ public class PublisherRegistryRestControllerTest {
                 ))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/parser/publishers")
+        mockMvc.perform(post("/registry/publishers")
                 .contentType("text/plain;charset=UTF-8")
                 .content(
                         "publisher:\n" +
@@ -311,7 +311,7 @@ public class PublisherRegistryRestControllerTest {
                 ))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/parser/publishers"))
+        mockMvc.perform(get("/registry/publishers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
     }

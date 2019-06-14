@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
+import java.util.Objects;
 
 @Component
 public class VocabularyParser {
@@ -31,16 +32,27 @@ public class VocabularyParser {
         this.inventoryService = inventoryService;
     }
 
+    public void parseVocabulary(final String rtfDoc) throws IOException, XMLStreamException {
+
+        Objects.requireNonNull(rtfDoc,"Empty contents passed for parsing");
+        // Utilizing 3rd party library for RTF
+        IRtfSource rtfSource = newRtfSourceFromString(rtfDoc);
+
+        doParse(rtfSource);
+    }
+
     public void parseVocabulary(final File vocabularyRtfDoc) throws IOException, XMLStreamException {
 
-        if (vocabularyRtfDoc == null) {
-            throw new NullPointerException("Input RTF vocabulary document is null");
-        }
-
+        Objects.requireNonNull(vocabularyRtfDoc,"Input RTF vocabulary document is null");
         String docAbsolutePath = vocabularyRtfDoc.getAbsolutePath();
 
         // Utilizing 3rd party library for RTF
-        IRtfSource rtfSource = newRtfSource(docAbsolutePath);
+        IRtfSource rtfSource = newRtfSourceFromFile(docAbsolutePath);
+
+        doParse(rtfSource);
+    }
+
+    private void doParse(IRtfSource rtfSource) throws XMLStreamException, IOException {
         IRtfParser parser = new StandardRtfParser();
 
         VocabularySeparator vocabularySeparator = new VocabularySeparator();
@@ -57,8 +69,13 @@ public class VocabularyParser {
         vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
     }
 
-    private IRtfSource newRtfSource(String absPath) throws FileNotFoundException {
+    private IRtfSource newRtfSourceFromFile(String absPath) throws FileNotFoundException {
         InputStream rtfStream = new FileInputStream(absPath);
+        return new RtfStreamSource(rtfStream);
+    }
+
+    private IRtfSource newRtfSourceFromString(String contents) {
+        InputStream rtfStream =  new ByteArrayInputStream(contents.getBytes());
         return new RtfStreamSource(rtfStream);
     }
 }

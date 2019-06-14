@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/parser")
+@RequestMapping("/registry")
 public class PublisherRegistryRestController {
 
     private Logger logger = LoggerFactory.getLogger(PublisherRegistryRestController.class);
@@ -23,10 +23,12 @@ public class PublisherRegistryRestController {
     }
 
     @PostMapping(value = "/publishers", consumes = "text/plain;charset=UTF-8")
-    public void loadPublisher(@RequestBody String grammarDefinition) {
+    public void registerPublisherSpecification(@RequestBody String specification) {
 
-        logger.info("Uploading Publisher Grammar...");
-        registry.registerPublisherSpecification(new ByteArrayInputStream(grammarDefinition.getBytes()));
+        logger.info("Uploading Publisher Specs...");
+        registry.registerPublisherSpecification(new ByteArrayInputStream(specification.getBytes()));
+        logger.info("Publisher Specs successfully registered");
+
     }
 
     @GetMapping(value = "/publishers", produces = "application/json")
