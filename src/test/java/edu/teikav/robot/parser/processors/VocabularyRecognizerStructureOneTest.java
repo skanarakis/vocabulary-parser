@@ -122,7 +122,7 @@ public class VocabularyRecognizerStructureOneTest {
         item.setTermType(SpeechPart.VERB);
         item.setTranslation(termTranslation);
         item.setExample(termExample);
-        item.setVerbParticiples(partsOfComposite[1]);
+        item.setVerbParticiples(partsOfComposite[1].replace(")", ""));
         Mockito.verify(inventoryService, Mockito.times(1))
                 .save(item);
     }

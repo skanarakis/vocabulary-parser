@@ -84,6 +84,12 @@ public class YAMLPublisherSpecRegistryImpl implements PublisherSpecificationRegi
         logger.info("Cleared {} publisher specifications from Registry", specsRegistrySize);
     }
 
+    @Override
+    public boolean deleteSpecsFor(String publisher) {
+        Objects.requireNonNull(publisher, "Valid publisher name must be passed for deletion");
+        return specs.removeIf(spec -> spec.getPublisher().getName().equals(publisher));
+    }
+
     private void loadContext(PublisherDocumentInput document) {
         specs.add(new PublisherSpecification(document));
     }

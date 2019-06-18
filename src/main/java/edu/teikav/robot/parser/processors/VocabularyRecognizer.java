@@ -58,7 +58,14 @@ public class VocabularyRecognizer {
         itemUpdateSnippets.put("EXAMPLE", (grammarContext, item, value) -> item.setExample(value));
         itemUpdateSnippets.put("DERIVATIVES", (grammarContext, item, value) -> item.setDerivative(value));
         itemUpdateSnippets.put("OPPOSITES", (grammarContext, item, value) -> item.setOpposite(value));
-        itemUpdateSnippets.put("VERB_PARTICIPLES", (grammarContext, item, value) -> item.setVerbParticiples(value));
+        itemUpdateSnippets.put("VERB_PARTICIPLES", (grammarContext, item, value) -> {
+            // TODO: Short-term correction to erase the last parenthesis left after composite part processing
+            // TODO: This is not generic and should be moved elsewhere. Find a smarter way to do it
+            if (!value.contains("(") && value.contains(")")) {
+                value = value.replace(")", "");
+            }
+            item.setVerbParticiples(value);
+        });
     }
 
     public VocabularyRecognizer(PublisherSpecificationRegistry registry, InventoryService inventoryService) {

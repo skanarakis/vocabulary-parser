@@ -64,4 +64,11 @@ public interface PublisherSpecificationRegistry {
      * Remove all registered publisher specifications from Registry
      */
     void removeAllPublisherSpecs();
+
+    /**
+     * Remove specs for a specific publisher
+     * @param publisher Publisher name
+     * @return Flag indicating success or failure
+     */
+    boolean deleteSpecsFor(String publisher);
 }
