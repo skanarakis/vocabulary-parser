@@ -1,8 +1,8 @@
 package edu.teikav.robot.parser.util;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 public class TokenUtilsTest {
 
@@ -33,15 +33,15 @@ public class TokenUtilsTest {
 
     @Test
     public void removeNumericDigitsBeforeTokenCases() {
-        assertEquals("token",TokenUtils.removeNumericDigitsBeforeToken("1token"));
-        assertEquals("token",TokenUtils.removeNumericDigitsBeforeToken("1.5 token"));
-        assertEquals("token",TokenUtils.removeNumericDigitsBeforeToken("1.0token"));
-        assertEquals("token",TokenUtils.removeNumericDigitsBeforeToken("1.token"));
-        assertEquals("(token)",TokenUtils.removeNumericDigitsBeforeToken("1.(token)"));
-        assertEquals("(v)",TokenUtils.removeNumericDigitsBeforeToken("(v)"));
-        assertEquals("(v)",TokenUtils.removeNumericDigitsBeforeToken("2.3(v)"));
-        assertEquals("...",TokenUtils.removeNumericDigitsBeforeToken("..."));
-        assertEquals("a...b..",TokenUtils.removeNumericDigitsBeforeToken("a...b.."));
-        assertEquals("a...b..",TokenUtils.removeNumericDigitsBeforeToken("234.5 a...b.."));
+        assertEquals("token",TokenUtils.removeNonLetterCharsInPrefix("1token"));
+        assertEquals("token",TokenUtils.removeNonLetterCharsInPrefix("1.5 token"));
+        assertEquals("token",TokenUtils.removeNonLetterCharsInPrefix("1.0token"));
+        assertEquals("token",TokenUtils.removeNonLetterCharsInPrefix("1.token"));
+        assertEquals("(token)",TokenUtils.removeNonLetterCharsInPrefix("1.(token)"));
+        assertEquals("(v)",TokenUtils.removeNonLetterCharsInPrefix("(v)"));
+        assertEquals("(v)",TokenUtils.removeNonLetterCharsInPrefix("2.3(v)"));
+        assertEquals("...",TokenUtils.removeNonLetterCharsInPrefix("..."));
+        assertEquals("a...b..",TokenUtils.removeNonLetterCharsInPrefix("a...b.."));
+        assertEquals("a...b..",TokenUtils.removeNonLetterCharsInPrefix("234.5 a...b.."));
     }
 }

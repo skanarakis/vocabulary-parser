@@ -51,7 +51,7 @@ vocabularyStructureSpecs:
       potentiallyLast: false
       potentiallySplit: false
       potentiallyComposite: false
-      pattern: "[\\s\\p{InGreek}]+"
+      pattern: "[-,\\s\\p{InGreek}]+"
   - tokenType: EXAMPLE
     rtfSpecs:
       textPoints: 11

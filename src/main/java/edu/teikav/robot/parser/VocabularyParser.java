@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.*;
@@ -38,10 +39,20 @@ public class VocabularyParser {
         // Utilizing 3rd party library for RTF
         IRtfSource rtfSource = newRtfSourceFromString(rtfDoc);
 
-        doParse(rtfSource);
+        doParse(rtfSource, null);
     }
 
-    public void parseVocabulary(final File vocabularyRtfDoc) throws IOException, XMLStreamException {
+    public void parseVocabulary(String rtfDoc, String publisher) throws IOException, XMLStreamException {
+        Objects.requireNonNull(rtfDoc,"Input RTF vocabulary document is null");
+        Objects.requireNonNull(publisher,"Publisher name is null");
+
+        // Utilizing 3rd party library for RTF
+        IRtfSource rtfSource = newRtfSourceFromString(rtfDoc);
+
+        doParse(rtfSource, publisher);
+    }
+
+    void parseVocabulary(final File vocabularyRtfDoc) throws IOException, XMLStreamException {
 
         Objects.requireNonNull(vocabularyRtfDoc,"Input RTF vocabulary document is null");
         String docAbsolutePath = vocabularyRtfDoc.getAbsolutePath();
@@ -49,19 +60,24 @@ public class VocabularyParser {
         // Utilizing 3rd party library for RTF
         IRtfSource rtfSource = newRtfSourceFromFile(docAbsolutePath);
 
-        doParse(rtfSource);
+        doParse(rtfSource, null);
     }
 
-    private void doParse(IRtfSource rtfSource) throws XMLStreamException, IOException {
+    private void doParse(IRtfSource rtfSource, String publisher) throws XMLStreamException, IOException {
         IRtfParser parser = new StandardRtfParser();
 
         VocabularySeparator vocabularySeparator = new VocabularySeparator();
         parser.parse(rtfSource, vocabularySeparator);
 
-        // Make the first pass to identify publisher
-        logger.info("Parser will attempt the first pass - Attempt to identify publisher");
-        PublisherIdentifier publisherIdentifier = new PublisherIdentifier(registry, vocabularySeparator);
-        publisherIdentifier.identifyPublisher();
+        if (StringUtils.isEmpty(publisher)) {
+            registry.resetActiveSpec();
+            // Make the first pass to identify publisher
+            logger.info("Parser will attempt the first pass - Attempt to identify publisher");
+            PublisherIdentifier publisherIdentifier = new PublisherIdentifier(registry, vocabularySeparator);
+            publisherIdentifier.identifyPublisher();
+        } else {
+            registry.setActiveSpec(publisher);
+        }
 
         // Make the second pass to recognize vocabulary structure
         logger.info("Parser will attempt the second pass - Attempt to recognize vocabulary");

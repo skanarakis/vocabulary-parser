@@ -11,6 +11,6 @@ public enum VocabularyTokenType {
     SYNONYMS,
     OPPOSITES,
     DERIVATIVES,
-    VERB_PARTICIPLES;
-
+    VERB_PARTICIPLES,
+    PHRASE
 }

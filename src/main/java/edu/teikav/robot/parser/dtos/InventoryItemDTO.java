@@ -13,6 +13,9 @@ public class InventoryItemDTO {
     private String opposite;
     private String pronunciation;
     private String verbParticiples;
+    private String phrase;
+    private String synonyms;
+
 
     public InventoryItemDTO() {}
 
@@ -30,6 +33,8 @@ public class InventoryItemDTO {
         opposite = item.getOpposite();
         pronunciation = item.getPronunciation();
         verbParticiples = item.getVerbParticiples();
+        phrase = item.getPhrase();
+        synonyms = item.getSynonyms();
     }
 
     public SpeechPart getSpeechPart() {
@@ -83,4 +88,12 @@ public class InventoryItemDTO {
     public void setVerbParticiples(String verbParticiples) {
         this.verbParticiples = verbParticiples;
     }
+
+    public String getPhrase() { return phrase; }
+
+    public void setPhrase(String phrase) { this.phrase = phrase; }
+
+    public String getSynonyms() { return synonyms; }
+
+    public void setSynonyms(String synonyms) { this.synonyms = synonyms; }
 }

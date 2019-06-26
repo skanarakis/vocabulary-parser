@@ -43,10 +43,21 @@ public interface PublisherSpecificationRegistry {
     void setActiveSpec(PublisherSpecification spec);
 
     /**
+     * Set the active publisher spec. At any time, only one spec can be active
+     * @param publisher The active publisher name
+     */
+    void setActiveSpec(String publisher);
+
+    /**
      * Get the active publisher spec
      * @return Optionally the active publisher specification if found
      */
     Optional<PublisherSpecification> getActiveSpec();
+
+    /**
+     * Reset previously active specs
+     */
+    void resetActiveSpec();
 
     /**
      * Get size of Publisher Specifications Registry

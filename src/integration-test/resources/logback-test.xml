@@ -3,5 +3,6 @@
         <include resource="org/springframework/boot/logging/logback/base.xml" />
         <logger name="org.springframework" level="ERROR"/>
         <logger name="edu.teikav.robot.parser.util.TokenUtils" level="ERROR"/>
-        <logger name="edu.teikav.robot.parser.processors.VocabularyRecognizer" level="DEBUG"/>
+        <logger name="edu.teikav.robot.parser.processors" level="DEBUG"/>
+        <logger name="edu.teikav.robot.parser.services.InMemoryInventoryServiceImpl" level="DEBUG"/>
     </configuration>

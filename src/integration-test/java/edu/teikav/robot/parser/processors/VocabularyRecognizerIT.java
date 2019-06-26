@@ -177,5 +177,30 @@ public class VocabularyRecognizerIT {
 
         Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(30);
     }
+
+    @Test
+    public void inventoriesVocabularyForGePublisher() throws IOException, XMLStreamException {
+
+        OutputStream outputStream = FileUtils
+                .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "Ge-pub-complete-voc-separation.xml");
+
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
+                "GE-B2-b.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+
+        // Separate vocabulary parts
+        VocabularySeparator vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
+
+        // Cannot identify this publisher for the time being. Explicitly state publisher
+        registry.setActiveSpec("GE");
+
+        // Make the second pass to recognize vocabulary structure
+        VocabularyRecognizer vocabularyRecognizer = new VocabularyRecognizer(registry, inventoryService);
+        vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
+
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(18);
+    }
 }
 

@@ -42,4 +42,14 @@ public class VocabularySeparatorIT {
         IRtfListener vocabularySeparator = new VocabularySeparator(outputStream);
         parser.parse(source, vocabularySeparator);
     }
+
+    @Test
+    public void processTokenForGePublisherFormat() throws IOException, XMLStreamException {
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "GE-B2-b.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+        OutputStream outputStream = getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "test-token-processing-GE-B2-b.xml");
+        IRtfListener vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
+    }
 }

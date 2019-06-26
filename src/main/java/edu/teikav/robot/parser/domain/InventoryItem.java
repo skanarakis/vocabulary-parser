@@ -12,6 +12,8 @@ public class InventoryItem {
     private String derivative;
     private String opposite;
     private String verbParticiples;
+    private String phrase;
+    private String synonyms;
 
     public InventoryItem(String term) {
         this.term = term;
@@ -26,6 +28,7 @@ public class InventoryItem {
         this.derivative = item.getDerivative();
         this.opposite = item.getOpposite();
         this.verbParticiples = item.getVerbParticiples();
+        this.phrase = item.getPhrase();
     }
 
     public void setTermType(SpeechPart termType) {
@@ -84,6 +87,14 @@ public class InventoryItem {
         this.verbParticiples = verbParticiples;
     }
 
+    public String getPhrase() { return phrase; }
+
+    public void setPhrase(String phrase) { this.phrase = phrase; }
+
+    public String getSynonyms() { return synonyms; }
+
+    public void setSynonyms(String synonyms) { this.synonyms = synonyms; }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -96,6 +107,8 @@ public class InventoryItem {
                 Objects.equals(pronunciation, that.pronunciation) &&
                 Objects.equals(derivative, that.derivative) &&
                 Objects.equals(opposite, that.opposite) &&
+                Objects.equals(phrase, that.phrase) &&
+                Objects.equals(synonyms, that.synonyms) &&
                 Objects.equals(verbParticiples, that.verbParticiples);
     }
 
@@ -103,7 +116,7 @@ public class InventoryItem {
     public int hashCode() {
 
         return Objects.hash(term, termType.toString(), translation, example,
-                pronunciation, derivative, opposite, verbParticiples);
+                pronunciation, derivative, opposite, verbParticiples, phrase, synonyms);
     }
 
     @Override
@@ -126,6 +139,12 @@ public class InventoryItem {
         }
         if (verbParticiples != null && verbParticiples.length() > 0) {
             sb.append(", verbParticiples='").append(verbParticiples).append('\'');
+        }
+        if (phrase != null && phrase.length() > 0) {
+            sb.append(", phrase='").append(phrase).append('\'');
+        }
+        if (synonyms != null && synonyms.length() > 0) {
+            sb.append(", synonyms='").append(synonyms).append('\'');
         }
         sb.append('}');
         return sb.toString();

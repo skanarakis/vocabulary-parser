@@ -247,18 +247,17 @@ public class VocabularySeparator implements IRtfListener {
         }
 
         if (token == null) {
-            logger.warn("Null token string. Ignoring it");
+            logger.warn("Ignoring null token");
             return;
         }
-
         String trimmedToken = token.trim();
 
-        if (TokenUtils.isDegenerate(trimmedToken) || TokenUtils.isDigitsOnly(trimmedToken))
+        if (TokenUtils.isDigitsOnly(trimmedToken) || TokenUtils.isDegenerate(trimmedToken))
             return;
 
         if (isImportantToken(trimmedToken)) {
-            String cleanToken = TokenUtils.removeNumericDigitsBeforeToken(trimmedToken);
-            logger.debug("Processing token {}", cleanToken);
+            String cleanToken = TokenUtils.removeNonLetterCharsInPrefix(trimmedToken);
+            logger.debug("Processing >{}<", cleanToken);
             currentToken.setValue(cleanToken);
             vocPartsStream.add(currentToken.clone());
         } else {

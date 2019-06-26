@@ -68,7 +68,7 @@ public class VocabularyRecognizerStructureTwoTest {
         Mockito.when(spec.isTermPotentiallyLast("TRANSLATION")).thenReturn(false);
         Mockito.when(spec.isTermPotentiallySplit("TRANSLATION")).thenReturn(false);
         Mockito.when(spec.isTermPotentiallyComposite("TRANSLATION")).thenReturn(false);
-        Mockito.when(spec.getTermPattern("TRANSLATION")).thenReturn("[\\s\\p{InGreek}]+");
+        Mockito.when(spec.getTermPattern("TRANSLATION")).thenReturn("[-,\\(\\)\\s\\p{InGreek}]+");
 
         Mockito.when(spec.isTermPotentiallyLast("EXAMPLE")).thenReturn(true);
         Mockito.when(spec.isTermPotentiallySplit("EXAMPLE")).thenReturn(false);

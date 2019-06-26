@@ -15,8 +15,13 @@ public class TokenUtils
 
     public static boolean isDegenerate(String token) {
 
-        if (token.length() == 0 || token.length() == 1) {
-            logger.debug("Degenerate token string >>{}<<. Ignoring it", token);
+        if (token.length() == 0) {
+            logger.debug("Ignoring degenerate empty token");
+            return true;
+        }
+        // 'I' is not a degenerate token
+        if (token.length() == 1 && !token.equals("I")) {
+            logger.debug("Ignoring degenerate token >>{}<<", token);
             return true;
         }
 
@@ -25,18 +30,18 @@ public class TokenUtils
 
     public static boolean isDigitsOnly(String token) {
         if (digitsOnlyPattern.matcher(token).matches()) {
-            logger.warn("Digits-only token >>{}<<. Ignoring it", token);
+            logger.warn("Ignoring digits-only token >>{}<<", token);
             return true;
         }
         return false;
     }
 
-    public static String removeNumericDigitsBeforeToken(String token) {
+    public static String removeNonLetterCharsInPrefix(String token) {
 
         int index = 0;
         char current = token.charAt(0);
         int length = token.length();
-        while (index < length - 1 && !Character.isLetter(current) && current != '(') {
+        while (index < length - 1 && (Character.isDigit(current) || current == '.' || current == ' ')) {
             index++;
             current = token.charAt(index);
         }
@@ -45,6 +50,5 @@ public class TokenUtils
         } else {
             return token;
         }
-
     }
 }

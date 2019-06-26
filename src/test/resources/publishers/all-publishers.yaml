@@ -51,7 +51,7 @@ vocabularyStructureSpecs:
       potentiallyLast: false
       potentiallySplit: false
       potentiallyComposite: false
-      pattern: "[\\s\\p{InGreek}]+"
+      pattern: "[-,\\s\\p{InGreek}]+"
   - tokenType: EXAMPLE
     rtfSpecs:
       textPoints: 11
@@ -148,8 +148,8 @@ vocabularySpeechPartMappings:
   adj.: ADJECTIVE
 ---
 publisher:
-  name: Publisher C
-  description: Publisher C's Description
+  name: Our World
+  description: Publisher Description for Our World
   publicationYear: 2015
 vocabularyStructureSpecs:
   - tokenType: TERM
@@ -201,7 +201,7 @@ vocabularyStructureSpecs:
       potentiallyLast: false
       potentiallySplit: false
       potentiallyComposite: false
-      pattern: "[\\(\\)\\\\.\\s\\p{InGreek}]+"
+      pattern: "[-,\\(\\)\\\\.\\s\\p{InGreek}]+"
   - tokenType: EXAMPLE
     rtfSpecs:
       textPoints: 10
@@ -258,6 +258,121 @@ vocabularyStructureTransitions:
   - "OPPOSITES -> DERIVATIVES"
   - "DERIVATIVES -> TERM"
   - "OPPOSITES -> TERM"
+vocabularySpeechPartMappings:
+  (n): NOUN
+  (v): VERB
+  (adj): ADJECTIVE
+  (adv): ADVERB
+  (phr v): PHRASAL_VERB
+---
+publisher:
+  name: GE
+  description: Publisher GE Description
+  publicationYear: 2018
+vocabularyStructureSpecs:
+  - tokenType: TERM
+    rtfSpecs:
+      textPoints: 9
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: true
+    tokenTypeSpecs:
+      language: ENGLISH
+      pattern: "^[-a-zA-Z0-9\\s\\/\\/\\:\\']*$"
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
+  - tokenType: PRONUNCIATION
+    rtfSpecs:
+      textPoints: 9
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: true
+      compositeSpecs:
+        parts:
+          - "PRONUNCIATION"
+          - "GRAMMAR_TYPE"
+          - "TRANSLATION"
+        splitPattern: "[/=]"
+  - tokenType: EXAMPLE
+    rtfSpecs:
+      textPoints: 8
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: true
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: true
+      potentiallyComposite: false
+  - tokenType: PHRASE
+    rtfSpecs:
+      textPoints: 9
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      pattern: "^[a-zA-Z0-9\\s\\/\\/\\:\\']*$"
+      potentiallyLast: true
+      potentiallySplit: false
+      potentiallyComposite: false
+  - tokenType: TRANSLATION
+    rtfSpecs:
+      textPoints: 9
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: GREEK
+      potentiallyLast: true
+      potentiallySplit: false
+      potentiallyComposite: false
+      pattern: "[-,\\(\\)\\\\.\\s\\p{InGreek}]+"
+  - tokenType: SYNONYMS
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: true
+      potentiallySplit: false
+      potentiallyComposite: false
+      pattern: "Syn:[\\sa-zA-Z\\(\\)]+"
+vocabularyStructureTransitions:
+  - "TERM -> PRONUNCIATION"
+  - "PRONUNCIATION -> EXAMPLE"
+  - "EXAMPLE -> TRANSLATION"
+  - "TRANSLATION -> SYNONYMS"
+  - "TRANSLATION -> TERM"
+  - "TRANSLATION -> PHRASE"
+  - "SYNONYMS -> TERM"
+  - "PHRASE -> TERM"
 vocabularySpeechPartMappings:
   (n): NOUN
   (v): VERB

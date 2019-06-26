@@ -5,18 +5,16 @@ import edu.teikav.robot.parser.domain.PublisherSpecification;
 import edu.teikav.robot.parser.domain.SpeechPart;
 import edu.teikav.robot.parser.exceptions.InvalidGraphException;
 import edu.teikav.robot.parser.exceptions.NoMatchingVertexException;
-import edu.teikav.robot.parser.exceptions.RecognizerProcessingException;
 import edu.teikav.robot.parser.exceptions.UnrecognizedPublisherException;
 import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class VocabularyRecognizer {
@@ -53,11 +51,19 @@ public class VocabularyRecognizer {
             item.setTermType(grammarType.orElseThrow(() -> new RuntimeException("Inconsistency " +
                     "when fetching Grammar Type for >>" + value + "<<")));
         });
-        itemUpdateSnippets.put("TRANSLATION", (grammarContext, item, value) -> item.setTranslation(value));
+        itemUpdateSnippets.put("TRANSLATION", (grammarContext, item, value) -> {
+            if (StringUtils.isEmpty(item.getTranslation())) {
+                item.setTranslation(value);
+            } else {
+                item.setTranslation(item.getTranslation() + "##" + value);
+            }
+        });
         itemUpdateSnippets.put("PRONUNCIATION", (grammarContext, item, value) -> item.setPronunciation(value));
         itemUpdateSnippets.put("EXAMPLE", (grammarContext, item, value) -> item.setExample(value));
         itemUpdateSnippets.put("DERIVATIVES", (grammarContext, item, value) -> item.setDerivative(value));
         itemUpdateSnippets.put("OPPOSITES", (grammarContext, item, value) -> item.setOpposite(value));
+        itemUpdateSnippets.put("PHRASE", (grammarContext, item, value) -> item.setPhrase(value));
+        itemUpdateSnippets.put("SYNONYMS", (grammarContext, item, value) -> item.setSynonyms(value));
         itemUpdateSnippets.put("VERB_PARTICIPLES", (grammarContext, item, value) -> {
             // TODO: Short-term correction to erase the last parenthesis left after composite part processing
             // TODO: This is not generic and should be moved elsewhere. Find a smarter way to do it
@@ -133,27 +139,52 @@ public class VocabularyRecognizer {
     }
 
     private String findNextVocabularyPart(String tokenStringValue) {
-        List<String> expectedTransitions = activeSpec.getValidTransitionsFor(activeVocabularyPart);
-        logger.debug("Valid transitions for {} : {}", activeVocabularyPart, expectedTransitions);
-        if (expectedTransitions.size() == 1) {
-            String nextPart = expectedTransitions.get(0);
-            logger.debug("Next vocabulary part found: {}", nextPart);
-            return nextPart;
-        }
-        for (String transition : expectedTransitions) {
-            Pattern pattern = Pattern.compile(activeSpec.getTermPattern(transition));
-            if (pattern.matcher(tokenStringValue).matches()) {
-                logger.debug("Matched pattern [{}] for token [{}]. New vocabulary part found: [{}]",
-                        activeSpec.getTermPattern(transition), tokenStringValue, transition);
+        List<String> validTransitions = activeSpec.getValidTransitionsFor(activeVocabularyPart);
+        logger.debug("Valid transitions for {} : {}", activeVocabularyPart, validTransitions);
+
+        if (validTransitions.size() == 1) {
+            String transition = validTransitions.get(0);
+            if (activeSpec.getTermPattern(transition) == null || patternFound(tokenStringValue, transition)) {
+                // In case next transition lacks RegEx pattern
+                logger.debug("Next vocabulary part found: {}", transition);
                 return transition;
-            } else {
-                logger.debug("No match for pattern [{}] for token [{}] (Checking transition [{}])",
-                        activeSpec.getTermPattern(transition), tokenStringValue, transition);
+            }
+        } else {
+            for (String transition : validTransitions) {
+                if (patternFound(tokenStringValue, transition)) {
+                    if (transition.equals("TERM") && tokenFoundInCurrentItem(tokenStringValue)) {
+                        logger.debug("Potential transition to TERM but the token content [{}] seems relevant with [{}]."
+                                + " Ignore transition to a new TERM", tokenStringValue, currentItem.getTerm());
+                    } else {
+                        return transition;
+                    }
+                }
             }
         }
+
         logger.debug("No new vocabulary part found. Keep the same: {}", activeVocabularyPart);
         return activeVocabularyPart;
     }
+
+    private boolean tokenFoundInCurrentItem(String tokenStringValue) {
+        return tokenStringValue.contains(currentItem.getTerm()) ||
+                currentItem.getTranslation().contains(tokenStringValue);
+    }
+
+
+    private boolean patternFound(String tokenStringValue, String nextPart) {
+        Pattern pattern = Pattern.compile(activeSpec.getTermPattern(nextPart));
+        if (pattern.matcher(tokenStringValue).matches()) {
+            logger.debug("Matched pattern [{}] for token [{}]. Matched vocabulary part: [{}]",
+                    activeSpec.getTermPattern(nextPart), tokenStringValue, nextPart);
+            return true;
+        } else {
+            logger.debug("No match for pattern [{}] for token [{}] (Checking transition [{}])",
+                    activeSpec.getTermPattern(nextPart), tokenStringValue, nextPart);
+        }
+        return false;
+    }
+
 
     private void handleReEntrantVertexTransition(String tokenStringValue) {
 
@@ -222,14 +253,21 @@ public class VocabularyRecognizer {
         logger.debug("Entered composite section for {}", activeVocabularyPart);
         List<String> compositePartTypes = activeSpec.getCompositePartsFor(activeVocabularyPart);
 
-        if (compositeParts.length != compositePartTypes.size()) {
-            throw new RecognizerProcessingException("Segments of a composite vocabulary part must have corresponding split token segments");
-        }
-
-        for (int i = 0; i < compositePartTypes.size(); i++) {
-            logger.debug("Iterating for segment {}({})", compositeParts[i], compositePartTypes.get(i));
-            ItemUpdateSnippet snippet = itemUpdateSnippets.get(compositePartTypes.get(i));
-            snippet.updateItem(activeSpec, currentItem, compositeParts[i]);
+        // Remove empty strings and trim the other ones
+        List<String> parts = Arrays.stream(compositeParts)
+                .filter(part -> !part.equals(""))
+                .map(String::trim)
+                .collect(Collectors.toList());
+        logger.debug("------------------------- {}", parts);
+        if (parts.size() != compositePartTypes.size()) {
+            //throw new RecognizerProcessingException("Segments of a composite vocabulary part must have corresponding split token segments");
+            logger.warn("TODO: HANDLE SITUATION WHERE NOT ALL PARTS OF COMPOSITES ARE PRESENT");
+        } else {
+            for (int i = 0; i < compositePartTypes.size(); i++) {
+                logger.debug("Iterating for segment >{}< ({})", parts.get(i), compositePartTypes.get(i));
+                ItemUpdateSnippet snippet = itemUpdateSnippets.get(compositePartTypes.get(i));
+                snippet.updateItem(activeSpec, currentItem, parts.get(i));
+            }
         }
     }
 

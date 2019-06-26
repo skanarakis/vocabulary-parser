@@ -220,6 +220,34 @@ public class PublisherIdentifierIT {
     }
 
     @Test
+    public void identifyGrammarOfGePublisher_whenRealRegistry_hasManyRegisteredGrammars()
+            throws IOException, XMLStreamException {
+
+        OutputStream outputStream = FileUtils
+                .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "identifyGrammar_realRegistry-6.xml");
+
+        PublisherSpecificationRegistry registry = new YAMLPublisherSpecRegistryImpl(yaml);
+        PublisherSpecificationRegistry spiedRegistry = Mockito.spy(registry);
+
+        InputStream publishersInputStream = this.getClass()
+                .getClassLoader()
+                .getResourceAsStream("publishers/all-publishers.yaml");
+        spiedRegistry.registerPublisherSpecifications(publishersInputStream);
+
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "GE-B2-b.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+
+        VocabularySeparator vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
+
+        PublisherIdentifier publisherIdentifier = new PublisherIdentifier(spiedRegistry, vocabularySeparator);
+        publisherIdentifier.identifyPublisher();
+
+        //Mockito.verify(spiedRegistry, Mockito.times(4)).findSpecByHashCode(any(Integer.class));
+    }
+
+    @Test
     public void produceXmlFromRealRtfDocument() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils

@@ -44,6 +44,8 @@ public class InMemoryInventoryServiceImpl implements InventoryService {
             existingItem.setVerbParticiples(item.getVerbParticiples());
             existingItem.setDerivative(item.getDerivative());
             existingItem.setOpposite(item.getOpposite());
+            existingItem.setPhrase(item.getPhrase());
+            existingItem.setSynonyms(item.getSynonyms());
             logger.debug("INVENTORY: Updating current item [{}]. Updated status\n{}", term, inventoryItemsMap.get(term));
         } else {
             logger.debug("INVENTORY: Storing new item [{}] with status\n{}", term, item);

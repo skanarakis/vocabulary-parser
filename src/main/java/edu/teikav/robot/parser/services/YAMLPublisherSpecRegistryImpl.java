@@ -55,6 +55,19 @@ public class YAMLPublisherSpecRegistryImpl implements PublisherSpecificationRegi
     }
 
     @Override
+    public void setActiveSpec(String publisher) {
+        activeSpec = specs.stream().filter(spec -> spec.getPublisher().getName().equals(publisher))
+                .findFirst()
+                .orElseThrow(
+                        () -> new RuntimeException(String.format("Publisher %s does not have any specs", publisher)));
+    }
+
+    @Override
+    public void resetActiveSpec() {
+        activeSpec = null;
+    }
+
+    @Override
     public void setActiveSpec(PublisherSpecification spec) {
         activeSpec = spec;
     }
