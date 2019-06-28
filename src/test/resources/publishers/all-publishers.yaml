@@ -334,6 +334,21 @@ vocabularyStructureSpecs:
       potentiallyLast: true
       potentiallySplit: false
       potentiallyComposite: false
+  - tokenType: DERIVATIVES
+    rtfSpecs:
+      textPoints: 9
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
+      pattern: "^.*(\\(n\\)|\\(v\\)).*$"
   - tokenType: TRANSLATION
     rtfSpecs:
       textPoints: 9
@@ -367,7 +382,9 @@ vocabularyStructureSpecs:
 vocabularyStructureTransitions:
   - "TERM -> PRONUNCIATION"
   - "PRONUNCIATION -> EXAMPLE"
+  - "EXAMPLE -> DERIVATIVES"
   - "EXAMPLE -> TRANSLATION"
+  - "DERIVATIVES -> TRANSLATION"
   - "TRANSLATION -> SYNONYMS"
   - "TRANSLATION -> TERM"
   - "TRANSLATION -> PHRASE"

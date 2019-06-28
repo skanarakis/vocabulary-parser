@@ -1,10 +1,10 @@
 package edu.teikav.robot.parser.util;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RegexTest {
 
@@ -94,5 +94,19 @@ public class RegexTest {
     public void testCompositeSplit() {
         String splitPattern = "\\s\\(";
         Assert.assertTrue("(v) (past: broke, past part: broken)".split(splitPattern).length == 2);
+    }
+
+    @Test
+    public void findDerivativesPattern() {
+        Pattern pattern = Pattern.compile("^.*(\\(n\\)|\\(v\\)).*$");
+
+        matcher = pattern.matcher("text(n)");
+        Assert.assertTrue(matcher.matches());
+
+        matcher = pattern.matcher("text(v)");
+        Assert.assertTrue(matcher.matches());
+
+        matcher = pattern.matcher("text(no)");
+        Assert.assertFalse(matcher.matches());
     }
 }
