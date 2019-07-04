@@ -35,6 +35,7 @@ public class VocabularyRecognizer {
     private boolean isFirstStreamedToken = true;
 
     private StringBuilder cachedPart = new StringBuilder();
+    private List<String> matchedTransitions;
 
     @FunctionalInterface
     private interface ItemUpdateSnippet {
@@ -58,8 +59,15 @@ public class VocabularyRecognizer {
                 item.setTranslation(item.getTranslation() + "##" + value);
             }
         });
-        itemUpdateSnippets.put("PRONUNCIATION", (grammarContext, item, value) -> item.setPronunciation(value));
-        itemUpdateSnippets.put("EXAMPLE", (grammarContext, item, value) -> item.setExample(value));
+        itemUpdateSnippets.put("PRONUNCIATION", (grammarContext, item, value) -> {
+            value = value.replace("[", "");
+            value = value.replace("]", "");
+            item.setPronunciation(value);
+        });
+        itemUpdateSnippets.put("EXAMPLE", (grammarContext, item, value) -> {
+            value = value.replace("\"", "");
+            item.setExample(value);
+        });
         itemUpdateSnippets.put("DERIVATIVES", (grammarContext, item, value) -> item.setDerivative(value));
         itemUpdateSnippets.put("OPPOSITES", (grammarContext, item, value) -> item.setOpposite(value));
         itemUpdateSnippets.put("PHRASE", (grammarContext, item, value) -> item.setPhrase(value));
@@ -78,6 +86,7 @@ public class VocabularyRecognizer {
         activeVocabularyPart = "TERM";
         this.inventoryService = inventoryService;
         this.registry = registry;
+        this.matchedTransitions = new ArrayList<>();
     }
 
     public void recognizeVocabulary(Stream<String> vocabularyPartsStream) {
@@ -150,27 +159,55 @@ public class VocabularyRecognizer {
                 return transition;
             }
         } else {
+            matchedTransitions.clear();
             for (String transition : validTransitions) {
                 if (patternFound(tokenStringValue, transition)) {
                     if (transition.equals("TERM") && tokenFoundInCurrentItem(tokenStringValue)) {
                         logger.debug("Potential transition to TERM but the token content [{}] seems relevant with [{}]."
                                 + " Ignore transition to a new TERM", tokenStringValue, currentItem.getTerm());
-                    } else {
-                        return transition;
+                    } else if (transition.equals("PHRASE") && !tokenFoundInCurrentItem(tokenStringValue)) {
+                        logger.debug("Potential transition to PHRASE but the token content [{}] seems irrelevant with [{}]."
+                                + " Ignore transition to PHRASE", tokenStringValue, currentItem.getTerm());
+                    }
+                    else {
+                        matchedTransitions.add(transition);
                     }
                 }
             }
+            if (matchedTransitions.size() > 0) {
+                if (matchedTransitions.size() == 1) {
+                    return matchedTransitions.get(0);
+                } else {
+                    return resolvePatternMatchConflict(tokenStringValue, matchedTransitions);
+                }
+            }
         }
-
         logger.debug("No new vocabulary part found. Keep the same: {}", activeVocabularyPart);
         return activeVocabularyPart;
     }
 
     private boolean tokenFoundInCurrentItem(String tokenStringValue) {
         return tokenStringValue.contains(currentItem.getTerm()) ||
-                currentItem.getTranslation().contains(tokenStringValue);
+                (currentItem.getTranslation()!= null && currentItem.getTranslation().contains(tokenStringValue));
     }
 
+    private String resolvePatternMatchConflict(String token, List<String> matchedTransitions) {
+        int numberOfWords = token.split(" ").length;
+
+        long rulesMatched =
+                matchedTransitions.stream()
+                        .filter(t -> activeSpec.getMaxWordsFor(t) >= numberOfWords &&
+                                activeSpec.getMinWordsFor(t) <= numberOfWords).count();
+
+        if (rulesMatched > 1) {
+            throw new RuntimeException(String.format("Ambiguity for next transition between %s", matchedTransitions));
+        }
+
+        return matchedTransitions.stream()
+                .filter(t -> activeSpec.getMaxWordsFor(t) >= numberOfWords &&
+                        activeSpec.getMinWordsFor(t) <= numberOfWords)
+                .findFirst().orElseThrow(() -> new RuntimeException(String.format("Impossible: %s", matchedTransitions)));
+    }
 
     private boolean patternFound(String tokenStringValue, String nextPart) {
         Pattern pattern = Pattern.compile(activeSpec.getTermPattern(nextPart));
@@ -258,9 +295,9 @@ public class VocabularyRecognizer {
                 .filter(part -> !part.equals(""))
                 .map(String::trim)
                 .collect(Collectors.toList());
-        logger.debug("------------------------- {}", parts);
         if (parts.size() != compositePartTypes.size()) {
             //throw new RecognizerProcessingException("Segments of a composite vocabulary part must have corresponding split token segments");
+            // TODO: Handle Composite segments absence
             logger.warn("TODO: HANDLE SITUATION WHERE NOT ALL PARTS OF COMPOSITES ARE PRESENT");
         } else {
             for (int i = 0; i < compositePartTypes.size(); i++) {

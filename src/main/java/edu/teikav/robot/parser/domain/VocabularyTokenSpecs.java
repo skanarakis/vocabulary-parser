@@ -79,6 +79,8 @@ public class VocabularyTokenSpecs implements Cloneable {
         private boolean potentiallySplit;
         private boolean potentiallyComposite;
         private String pattern;
+        private int maxWords;
+        private int minWords;
         private CompositeSpecs compositeSpecs;
 
         public static class CompositeSpecs {
@@ -156,6 +158,22 @@ public class VocabularyTokenSpecs implements Cloneable {
             this.potentiallyComposite = potentiallyComposite;
         }
 
+        public int getMaxWords() {
+            return maxWords;
+        }
+
+        public void setMaxWords(int maxWords) {
+            this.maxWords = maxWords;
+        }
+
+        public int getMinWords() {
+            return minWords;
+        }
+
+        public void setMinWords(int minWords) {
+            this.minWords = minWords;
+        }
+
         public String getPattern() {
             return pattern;
         }
@@ -181,6 +199,8 @@ public class VocabularyTokenSpecs implements Cloneable {
                     isPotentiallySplit() == that.isPotentiallySplit() &&
                     isPotentiallyComposite() == that.isPotentiallyComposite() &&
                     getLanguage() == that.getLanguage() &&
+                    getMaxWords() == that.getMaxWords() &&
+                    getMinWords() == that.getMinWords() &&
                     Objects.equals(getPattern(), that.getPattern()) &&
                     Objects.equals(getCompositeSpecs(), that.getCompositeSpecs());
         }
@@ -188,7 +208,7 @@ public class VocabularyTokenSpecs implements Cloneable {
         @Override
         public int hashCode() {
             return Objects.hash(getLanguage().ordinal(), isPotentiallyLast(), isPotentiallySplit(),
-                    isPotentiallyComposite(), getPattern(), getCompositeSpecs());
+                    isPotentiallyComposite(), getPattern(), getCompositeSpecs(), getMaxWords(), getMinWords());
         }
 
         @Override
@@ -199,6 +219,8 @@ public class VocabularyTokenSpecs implements Cloneable {
                     ", potentiallySplit=" + potentiallySplit +
                     ", potentiallyComposite=" + potentiallyComposite +
                     ", pattern='" + pattern + '\'' +
+                    ", maxWords='" + maxWords + '\'' +
+                    ", minWords='" + minWords + '\'' +
                     ", compositeSpecs=" + compositeSpecs +
                     '}';
         }

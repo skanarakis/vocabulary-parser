@@ -56,4 +56,10 @@ public class InMemoryInventoryServiceImpl implements InventoryService {
     public int inventorySize() {
         return inventoryItemsMap.size();
     }
+
+    @Override
+    public void clearInventory() {
+        logger.info("Clearing {} terms in inventory", inventoryItemsMap.size());
+        inventoryItemsMap.clear();
+    }
 }

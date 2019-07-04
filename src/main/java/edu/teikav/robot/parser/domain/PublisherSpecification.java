@@ -183,4 +183,16 @@ public class PublisherSpecification {
                 .filter(spec -> spec.getTokenType().toString().equals(type)).findFirst()
                 .orElseThrow(() -> new RuntimeException("Cannot find Spec for " + type));
     }
+
+    public int getMaxWordsFor(final String type) {
+        GenericUtils.validate(type, "Empty Token Type given as input");
+        VocabularyTokenSpecs specs = getTokenSpecs(type);
+        return specs.getTokenTypeSpecs().getMaxWords();
+    }
+
+    public int getMinWordsFor(final String type) {
+        GenericUtils.validate(type, "Empty Token Type given as input");
+        VocabularyTokenSpecs specs = getTokenSpecs(type);
+        return specs.getTokenTypeSpecs().getMinWords();
+    }
 }

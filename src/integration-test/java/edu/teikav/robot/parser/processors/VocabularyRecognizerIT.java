@@ -202,5 +202,30 @@ public class VocabularyRecognizerIT {
 
         Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(18);
     }
+
+    @Test
+    public void inventoriesVocabularyForPublisherE() throws IOException, XMLStreamException {
+
+        OutputStream outputStream = FileUtils
+                .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "E-pub-complete-voc-separation.xml");
+
+        InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH +
+                "PubE.rtf");
+        IRtfSource source = new RtfStreamSource(inputStream);
+        IRtfParser parser = new StandardRtfParser();
+
+        // Separate vocabulary parts
+        VocabularySeparator vocabularySeparator = new VocabularySeparator(outputStream);
+        parser.parse(source, vocabularySeparator);
+
+        // Skip identification for now
+        registry.setActiveSpec("Pub-E");
+
+        // Make the second pass to recognize vocabulary structure
+        VocabularyRecognizer vocabularyRecognizer = new VocabularyRecognizer(registry, inventoryService);
+        vocabularyRecognizer.recognizeVocabulary(vocabularySeparator.streamOfVocPartsValues());
+
+        Assertions.assertThat(inventoryService.inventorySize()).isEqualTo(37);
+    }
 }
 

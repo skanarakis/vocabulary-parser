@@ -281,10 +281,12 @@ vocabularyStructureSpecs:
       bold: true
     tokenTypeSpecs:
       language: ENGLISH
-      pattern: "^[-a-zA-Z0-9\\s\\/\\/\\:\\']*$"
+      pattern: "^[-a-zA-Z0-9\\s\\']*$"
       potentiallyLast: false
       potentiallySplit: false
       potentiallyComposite: false
+      minWords: 1
+      maxWords: 3
   - tokenType: PRONUNCIATION
     rtfSpecs:
       textPoints: 9
@@ -334,6 +336,8 @@ vocabularyStructureSpecs:
       potentiallyLast: true
       potentiallySplit: false
       potentiallyComposite: false
+      minWords: 3
+      maxWords: 100
   - tokenType: DERIVATIVES
     rtfSpecs:
       textPoints: 9
@@ -390,6 +394,89 @@ vocabularyStructureTransitions:
   - "TRANSLATION -> PHRASE"
   - "SYNONYMS -> TERM"
   - "PHRASE -> TERM"
+vocabularySpeechPartMappings:
+  (n): NOUN
+  (v): VERB
+  (adj): ADJECTIVE
+  (adv): ADVERB
+  (phr v): PHRASAL_VERB
+---
+publisher:
+  name: Pub-E
+  description: Publisher E Description
+  publicationYear: 2019
+vocabularyStructureSpecs:
+  - tokenType: TERM
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: true
+    tokenTypeSpecs:
+      language: ENGLISH
+      pattern: "^[-?a-zA-Z0-9\\s\\/\\/\\:\\'\\(\\)]*$"
+      potentiallyLast: false
+      potentiallySplit: true
+      potentiallyComposite: false
+      minWords: 1
+      maxWords: 4
+  - tokenType: GRAMMAR_TYPE
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: false
+      potentiallySplit: false
+      potentiallyComposite: false
+      pattern: "(^\\(v\\)|^\\(n\\)|^\\(phr v\\)|^\\(adj\\)).*"
+  - tokenType: TRANSLATION
+    rtfSpecs:
+      textPoints: 10
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: false
+      bold: false
+    tokenTypeSpecs:
+      language: GREEK
+      potentiallyLast: true
+      potentiallySplit: true
+      potentiallyComposite: false
+      pattern: "[-/;,\\(\\)\\\\.\\s\\p{InGreek}]+"
+  - tokenType: EXAMPLE
+    rtfSpecs:
+      textPoints: 9
+      color:
+        red: 0
+        green: 0
+        blue: 0
+      italicized: true
+      bold: false
+    tokenTypeSpecs:
+      language: ENGLISH
+      potentiallyLast: true
+      potentiallySplit: false
+      potentiallyComposite: false
+      pattern: "^[-a-zA-Z0-9’,\\s\\/\\/\\:\\'\"\\?!\\\\.]*$"
+      minWords: 5
+      maxWords: 100
+vocabularyStructureTransitions:
+  - "TERM -> GRAMMAR_TYPE"
+  - "TERM -> TRANSLATION"
+  - "GRAMMAR_TYPE -> TRANSLATION"
+  - "TRANSLATION -> EXAMPLE"
+  - "TRANSLATION -> TERM"
+  - "EXAMPLE -> TERM"
 vocabularySpeechPartMappings:
   (n): NOUN
   (v): VERB

@@ -3,12 +3,15 @@ package edu.teikav.robot.parser.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
-public class TokenUtils
-{
+public class TokenUtils {
     private static Logger logger = LoggerFactory.getLogger(TokenUtils.class);
     private static Pattern digitsOnlyPattern = Pattern.compile("^([0-9]+\\.?[0-9]*|[0-9]*\\.[0-9]+)$");
+
+    private static final List<String> DEGENERATE_TOKENS = Collections.singletonList("...");
 
     // Non-instantiable
     private TokenUtils() {}
@@ -22,6 +25,18 @@ public class TokenUtils
         // 'I' is not a degenerate token
         if (token.length() == 1 && !token.equals("I")) {
             logger.debug("Ignoring degenerate token >>{}<<", token);
+            return true;
+        }
+
+        for (int i = 0; i < token.length(); i++) {
+            if (!Character.isAlphabetic(token.charAt(i)) && !isAllowedNonLetterChar(token.charAt(i))) {
+                logger.debug("Ignoring degenerate token >>{}<<, it contains non Alphabetic chars", token);
+                return true;
+            }
+        }
+
+        if (DEGENERATE_TOKENS.contains(token)) {
+            logger.debug("Ignoring degenerate token >>{}<< (hard-coded rules)", token);
             return true;
         }
 
@@ -50,5 +65,33 @@ public class TokenUtils
         } else {
             return token;
         }
+    }
+
+    private static boolean isAllowedNonLetterChar(char c) {
+        return Character.isDigit(c) ||
+                c == ' ' ||
+                c == ';' ||
+                c == '-' ||
+                c == '_' ||
+                c == '+' ||
+                c == ',' ||
+                c == '=' ||
+                c == '#' ||
+                c == '!' ||
+                c == '(' ||
+                c == ')' ||
+                c == '[' ||
+                c == ']' ||
+                c == '%' ||
+                c == '"' ||
+                c == '’' ||
+                c == '.' ||
+                c == '?' ||
+                c == '&' ||
+                c == '/' ||
+                c == ':' ||
+                c == '|' ||
+                c == '^' ||
+                c == '\'';
     }
 }

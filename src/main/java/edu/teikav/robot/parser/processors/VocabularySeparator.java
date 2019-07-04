@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import javax.xml.stream.XMLStreamException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class VocabularySeparator implements IRtfListener {
@@ -40,6 +39,7 @@ public class VocabularySeparator implements IRtfListener {
     private static final String LIST_OVERRIDE_TABLE_COMMAND = "listoverridetable";
     private static final String INFO_COMMAND = "info";
     private static final String SHAPE_COMMAND = "shp";
+    private static final String SP_COMMAND = "sp";
     private static final String GENERATOR_COMMAND = "generator";
 
     // One instance of this class will be holding information for each consecutive token
@@ -142,8 +142,30 @@ public class VocabularySeparator implements IRtfListener {
         }
         nestedGroupCommandsQueue.removeLast();
         if (0 < rtfCommandsMap.size()) {
-            checkIfStillInScope(nestedGroupCommandsQueue.size());
+
+            long inScopeCommands = rtfCommandsMap.entrySet().stream()
+                    .filter(e -> e.getValue().scope == RtfCommandScope.IN_SCOPE).count();
+
+            if (inScopeCommands > 1) {
+                throw new RuntimeException(String.format("Too many RTF commands in scope. \n%s", printCommands()));
+            }
+
+            Optional<Map.Entry<String, CommandHelperAttributes>> inScopeCommand = rtfCommandsMap.entrySet().stream()
+                    .filter(e -> e.getValue().scope == RtfCommandScope.IN_SCOPE)
+                    .findFirst();
+            inScopeCommand.ifPresent(e -> recalculateScope(e.getKey(), nestedGroupCommandsQueue.size()));
         }
+    }
+
+    private String printCommands() {
+        StringBuilder sb = new StringBuilder();
+        rtfCommandsMap.forEach((key, value) -> sb.append(key)
+                .append("/")
+                .append(value.scope)
+                .append("/")
+                .append(value.nestedDepth)
+                .append(" "));
+        return sb.toString();
     }
 
     @Override
@@ -229,12 +251,23 @@ public class VocabularySeparator implements IRtfListener {
             case LIST_TABLE_COMMAND:
             case LIST_OVERRIDE_TABLE_COMMAND:
             case INFO_COMMAND:
-            case SHAPE_COMMAND:
+            case SP_COMMAND:
             case GENERATOR_COMMAND:
-                CommandHelperAttributes attributes = new CommandHelperAttributes();
-                attributes.nestedDepth = nestedGroupCommandsQueue.size();
-                attributes.scope = RtfCommandScope.IN_SCOPE;
-                rtfCommandsMap.put(commandName, attributes);
+                CommandHelperAttributes existingAttributes = rtfCommandsMap.get(commandName);
+                if (existingAttributes == null) {
+                    CommandHelperAttributes attributes = new CommandHelperAttributes();
+                    attributes.nestedDepth = nestedGroupCommandsQueue.size();
+                    attributes.scope = RtfCommandScope.IN_SCOPE;
+                    logger.trace("Command: {}, Scope: IN_SCOPE, Nested-Depth: {}", command, attributes.nestedDepth);
+                    rtfCommandsMap.put(commandName, attributes);
+                } else {
+                    existingAttributes.nestedDepth = nestedGroupCommandsQueue.size();
+                    if (existingAttributes.scope == RtfCommandScope.OUT_OF_SCOPE) {
+                        logger.trace("Scope changed from OUT_OF_SCOPE to IN_SCOPE for command {}", command);
+                    }
+                    existingAttributes.scope = RtfCommandScope.IN_SCOPE;
+                    logger.trace("Command: {}, Scope: IN_SCOPE, Nested-Depth: {}", command, existingAttributes.nestedDepth);
+                }
                 break;
         }
     }
@@ -273,34 +306,37 @@ public class VocabularySeparator implements IRtfListener {
         return vocPartsStream.stream().map(VocabularyToken::getValue);
     }
 
-    private void checkIfStillInScope(int currentNestingDepth) {
-        List<Map.Entry<String, CommandHelperAttributes>> commandsInScope = rtfCommandsMap.entrySet().stream()
-                .filter(e -> e.getValue().scope == RtfCommandScope.IN_SCOPE).collect(Collectors.toList());
-        if (commandsInScope.size() > 1) {
-            logger.debug("All Commands are {}", rtfCommandsMap.keySet());
-            logger.debug("Commands in scope are {}", commandsInScope);
-            throw new RuntimeException("Only one command should be in scope.Debug!!");
-        }
-        if (commandsInScope.size() == 1) {
-            String commandInScope = commandsInScope.get(0).getKey();
-            CommandHelperAttributes attributes = rtfCommandsMap.get(commandInScope);
-            // If current nesting depth is less than the stored command's depth, then we exited the command.
-            // We need to invalidate its scope
-            if (attributes.nestedDepth > currentNestingDepth) {
-                attributes.scope = RtfCommandScope.OUT_OF_SCOPE;
-            }
+    private void recalculateScope(String command, int currentNestingDepth) {
+
+        CommandHelperAttributes attributes = rtfCommandsMap.get(command);
+
+        // If current nesting depth is less than the stored command's depth, that means we exited the command.
+        if (attributes.nestedDepth > currentNestingDepth) {
+            attributes.scope = RtfCommandScope.OUT_OF_SCOPE;
         }
     }
 
     private boolean isImportantToken(String trimmedToken) {
         if (pictureCharactersComingNext) {
             pictureCharactersComingNext = false;
+            logger.trace("Unimportant - Picture");
+            return false;
+        }
+        if (headerComingNext) {
+            logger.trace("Unimportant - Header coming");
+            return false;
+        }
+        if (trimmedToken.startsWith("bookmark")) {
+            logger.trace("Unimportant - Bookmark");
             return false;
         }
 
-        return !headerComingNext &&
-                !trimmedToken.startsWith("bookmark") &&
-                rtfCommandsMap.entrySet().stream()
-                        .noneMatch(e -> e.getValue().scope == RtfCommandScope.IN_SCOPE);
+        if (rtfCommandsMap.entrySet().stream()
+                .anyMatch(e -> e.getValue().scope == RtfCommandScope.IN_SCOPE)) {
+            logger.trace("Unimportant - In scope of certain command\n{}", printCommands());
+            return false;
+        }
+
+        return true;
     }
 }

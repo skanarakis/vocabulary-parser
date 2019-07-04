@@ -14,6 +14,8 @@ public class VocabularyTokenSpecsDTO {
     private boolean isTermPotentiallyLast;
     private boolean isTermPotentiallySplit;
     private boolean isTermPotentiallyComposite;
+    private int maxWords;
+    private int minWords;
 
     public VocabularyTokenSpecsDTO() {}
 
@@ -26,6 +28,8 @@ public class VocabularyTokenSpecsDTO {
         isTermPotentiallyLast = spec.getTokenTypeSpecs().isPotentiallyLast();
         isTermPotentiallySplit = spec.getTokenTypeSpecs().isPotentiallySplit();
         isTermPotentiallyComposite = spec.getTokenTypeSpecs().isPotentiallyComposite();
+        maxWords = spec.getTokenTypeSpecs().getMaxWords();
+        minWords = spec.getTokenTypeSpecs().getMinWords();
     }
 
     public FontColor getFontColor() {
@@ -91,4 +95,12 @@ public class VocabularyTokenSpecsDTO {
     public void setTermPotentiallyComposite(boolean termPotentiallyComposite) {
         isTermPotentiallyComposite = termPotentiallyComposite;
     }
+
+    public int getMaxWords() { return maxWords; }
+
+    public void setMaxWords(int maxWords) { this.maxWords = maxWords; }
+
+    public int getMinWords() { return minWords; }
+
+    public void setMinWords(int minWords) { this.minWords = minWords; }
 }

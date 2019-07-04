@@ -15,4 +15,6 @@ public interface InventoryService {
     boolean isInventoried(String term);
 
     int inventorySize();
+
+    void clearInventory();
 }

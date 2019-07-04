@@ -50,7 +50,7 @@ public class YAMLPublisherSpecRegistryImplTest {
                 .getClassLoader()
                 .getResourceAsStream("publishers/all-publishers.yaml");
         registry.registerPublisherSpecifications(publisherSpecStreams);
-        Assertions.assertThat(registry.registrySize()).isEqualTo(4);
+        Assertions.assertThat(registry.registrySize()).isEqualTo(5);
     }
 
     @Test
