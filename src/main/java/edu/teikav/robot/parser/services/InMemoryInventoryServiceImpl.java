@@ -1,11 +1,10 @@
 package edu.teikav.robot.parser.services;
 
 import edu.teikav.robot.parser.domain.InventoryItem;
+import edu.teikav.robot.parser.util.Trie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -13,53 +12,42 @@ public class InMemoryInventoryServiceImpl implements InventoryService {
 
     private Logger logger = LoggerFactory.getLogger(InMemoryInventoryServiceImpl.class);
 
-    private Map<String, InventoryItem> inventoryItemsMap = new HashMap<>();
+    private Trie<InventoryItem> inventoryItems = new Trie<>();
 
     @Override
-    public InventoryItem getItem(String term) {
-        return inventoryItemsMap.get(term);
-    }
+    public InventoryItem getItem(String term) { return inventoryItems.search(term); }
 
     @Override
     public Map<String, InventoryItem> getAllItems() {
-        return Collections.unmodifiableMap(inventoryItemsMap);
+        return inventoryItems.allElements();
+    }
+
+    @Override
+    public Map<String, InventoryItem> getAllItemsStartingWith(String prefix) {
+        return inventoryItems.elementsOfKeysStartingWith(prefix);
     }
 
     @Override
     public boolean isInventoried(String term) {
-        return inventoryItemsMap.containsKey(term);
+        return inventoryItems.contains(term);
     }
 
     @Override
     public void save(InventoryItem item) {
         Objects.requireNonNull(item,"Cannot save inventory item with null input");
         String term = item.getTerm();
-        InventoryItem existingItem = inventoryItemsMap.putIfAbsent(term, new InventoryItem(item));
-        if (existingItem != null) {
-            // TODO: Currently we only overwrite. We need to update with a smarter way
-            existingItem.setTermType(item.getTermType());
-            existingItem.setTranslation(item.getTranslation());
-            existingItem.setExample(item.getExample());
-            existingItem.setPronunciation(item.getPronunciation());
-            existingItem.setVerbParticiples(item.getVerbParticiples());
-            existingItem.setDerivative(item.getDerivative());
-            existingItem.setOpposite(item.getOpposite());
-            existingItem.setPhrase(item.getPhrase());
-            existingItem.setSynonyms(item.getSynonyms());
-            logger.debug("INVENTORY: Updating current item [{}]. Updated status\n{}", term, inventoryItemsMap.get(term));
-        } else {
-            logger.debug("INVENTORY: Storing new item [{}] with status\n{}", term, item);
-        }
+        logger.debug("Saving term '{}' with item {}", term, item);
+        inventoryItems.insert(term, new InventoryItem(item));
     }
 
     @Override
     public int inventorySize() {
-        return inventoryItemsMap.size();
+        return inventoryItems.size();
     }
 
     @Override
     public void clearInventory() {
-        logger.info("Clearing {} terms in inventory", inventoryItemsMap.size());
-        inventoryItemsMap.clear();
+        logger.info("Clearing {} terms in inventory", inventoryItems.size());
+        inventoryItems.deleteAllKeys();
     }
 }

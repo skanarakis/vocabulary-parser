@@ -12,6 +12,8 @@ public interface InventoryService {
 
     Map<String, InventoryItem> getAllItems();
 
+    Map<String, InventoryItem> getAllItemsStartingWith(String prefix);
+
     boolean isInventoried(String term);
 
     int inventorySize();
