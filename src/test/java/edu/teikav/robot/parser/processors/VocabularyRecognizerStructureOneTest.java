@@ -5,24 +5,27 @@ import edu.teikav.robot.parser.domain.PublisherSpecification;
 import edu.teikav.robot.parser.domain.SpeechPart;
 import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static edu.teikav.robot.parser.domain.InventoryItem.createEmptyItemFor;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
-@RunWith(MockitoJUnitRunner.class)
-public class VocabularyRecognizerStructureOneTest {
+@ExtendWith(SpringExtension.class)
+@DisplayName("Unit-Test: Vocabulary Recognizer - II")
+class VocabularyRecognizerStructureOneTest {
 
     private VocabularyRecognizer recognizer;
 
@@ -31,8 +34,8 @@ public class VocabularyRecognizerStructureOneTest {
     @Mock
     private InventoryService inventoryService;
 
-    @BeforeClass
-    public static void init() {
+    @BeforeAll
+    static void init() {
         registry = Mockito.mock(PublisherSpecificationRegistry.class);
         PublisherSpecification spec = Mockito.mock(PublisherSpecification.class);
 
@@ -78,13 +81,13 @@ public class VocabularyRecognizerStructureOneTest {
         Mockito.when(spec.getSpeechPartFor("(adj)")).thenReturn(Optional.of(SpeechPart.ADJECTIVE));
     }
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         recognizer = new VocabularyRecognizer(registry, inventoryService);
     }
 
     @Test
-    public void acceptSingleTermWithoutFormatPeculiarities() {
+    void acceptSingleTermWithoutFormatPeculiarities() {
 
         String term = "rowing boat";
         String noun = "(n)";
@@ -95,7 +98,7 @@ public class VocabularyRecognizerStructureOneTest {
 
         recognizer.recognizeVocabulary(streamOfTokens);
 
-        InventoryItem item = new InventoryItem(term);
+        InventoryItem item = createEmptyItemFor(term);
         item.setTermType(SpeechPart.NOUN);
         item.setTranslation(termTranslation);
         item.setExample(termExample);
@@ -104,7 +107,7 @@ public class VocabularyRecognizerStructureOneTest {
     }
 
     @Test
-    public void acceptSingleTermWithCompositePart() {
+    void acceptSingleTermWithCompositePart() {
 
         String term = "break";
         String compositePart = "(v) (past: broke, past part: broken)";
@@ -112,13 +115,13 @@ public class VocabularyRecognizerStructureOneTest {
         String termExample = "I broke my leg last week";
 
         String[] partsOfComposite = compositePart.split("\\s\\(");
-        Assert.assertEquals(2, partsOfComposite.length);
+        assertThat(partsOfComposite.length).isEqualTo(2);
 
         Stream<String> streamOfTokens = Stream.of(term, compositePart, termTranslation, termExample);
 
         recognizer.recognizeVocabulary(streamOfTokens);
 
-        InventoryItem item = new InventoryItem(term);
+        InventoryItem item = createEmptyItemFor(term);
         item.setTermType(SpeechPart.VERB);
         item.setTranslation(termTranslation);
         item.setExample(termExample);
@@ -128,7 +131,7 @@ public class VocabularyRecognizerStructureOneTest {
     }
 
     @Test
-    public void acceptTwoTermsWithoutFormatPeculiarities() {
+    void acceptTwoTermsWithoutFormatPeculiarities() {
 
         String term = "rowing boat";
         String noun = "(n)";
@@ -150,7 +153,7 @@ public class VocabularyRecognizerStructureOneTest {
     }
 
     @Test
-    public void acceptTwoTermsWithOptionalGrammarType() {
+    void acceptTwoTermsWithOptionalGrammarType() {
 
         String term = "rowing boat";
         String noun = "(n)";
@@ -171,7 +174,7 @@ public class VocabularyRecognizerStructureOneTest {
     }
 
     @Test
-    public void acceptFourTermsInTotalFirstTwoWithOptionalGrammarType() {
+    void acceptFourTermsInTotalFirstTwoWithOptionalGrammarType() {
 
         String verb = "(v)";
         String adjective = "(adj)";

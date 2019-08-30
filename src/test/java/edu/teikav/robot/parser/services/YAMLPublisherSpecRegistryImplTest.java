@@ -5,26 +5,28 @@ import edu.teikav.robot.parser.domain.PublisherDocumentInput;
 import edu.teikav.robot.parser.domain.PublisherSpecification;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.InputStream;
 import java.util.Optional;
 
-public class YAMLPublisherSpecRegistryImplTest {
+@DisplayName("Unit-Test: Testing YAML Specs Publisher Registry")
+class YAMLPublisherSpecRegistryImplTest {
 
     private PublisherSpecificationRegistry registry;
 
-    @Before
-    public void initialize() {
+    @BeforeEach
+    void initialize() {
         registry = new YAMLPublisherSpecRegistryImpl(
                 new Yaml(new Constructor(PublisherDocumentInput.class)));
     }
 
     @Test
-    public void loadSinglePublisherSpec() {
+    void loadSinglePublisherSpec() {
 
         InputStream publisherSpecStream = this.getClass()
                 .getClassLoader()
@@ -34,7 +36,7 @@ public class YAMLPublisherSpecRegistryImplTest {
     }
 
     @Test
-    public void loadTwoPublisherSpecs() {
+    void loadTwoPublisherSpecs() {
 
         InputStream publisherSpecStreams = this.getClass()
                 .getClassLoader()
@@ -44,7 +46,7 @@ public class YAMLPublisherSpecRegistryImplTest {
     }
 
     @Test
-    public void loadAllPublisherSpecs() {
+    void loadAllPublisherSpecs() {
 
         InputStream publisherSpecStreams = this.getClass()
                 .getClassLoader()
@@ -54,7 +56,7 @@ public class YAMLPublisherSpecRegistryImplTest {
     }
 
     @Test
-    public void loadedSpecShouldReflectYAMLFile() {
+    void loadedSpecShouldReflectYAMLFile() {
 
         InputStream publisherSpecStream = this.getClass()
                 .getClassLoader()

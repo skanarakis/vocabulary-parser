@@ -24,6 +24,7 @@ public class Trie<E> {
 
     private TrieNode<E> root;
     private int trieSize;
+    private int nodesSize;
 
     /**
      * Constructs a new Trie with zero size
@@ -31,6 +32,7 @@ public class Trie<E> {
     public Trie() {
         this.root = new TrieNode<>();
         trieSize = 0;
+        nodesSize = 1;
     }
 
     /**
@@ -56,14 +58,6 @@ public class Trie<E> {
      * Deletes all elements in the Trie
      */
     public void deleteAllKeys() {
-        // TODO: We have to revisit if we need to explicitly delete all nodes or let the GC do its job
-
-        // GC way - what about island of isolation? (All children nodes will lose contact with root but their
-        // interrelationships will be unaffected)
-        // root.children.clear();
-        // trieSize = 0;
-
-        // Proper deletion
         for (String key : allKeys()) {
             delete(key);
         }
@@ -127,10 +121,17 @@ public class Trie<E> {
 
     public int size() { return trieSize; }
 
+    public int internalSize(){ return nodesSize; }
+
+    public boolean hasRoot() { return root != null; }
+
     public boolean isEmpty() { return trieSize == 0; }
 
     private TrieNode<E> insert(TrieNode<E> node, String key, E element, int index) {
-        if (node == null) node = new TrieNode<>();
+        if (node == null) {
+            node = new TrieNode<>();
+            nodesSize++;
+        }
         if (key.length() == index) {
             // TODO: overwriting right now. Later, we may want to update rather than overwriting
             node.element = element;
@@ -149,19 +150,24 @@ public class Trie<E> {
     private TrieNode<E> delete(TrieNode<E> node, String key, int index) {
         if (node == null) return null;
         if (key.length() == index) {
-            if (node.element != null)
+            if (node.element != null) {
                 trieSize--;
-            node.element = null;
+                node.element = null;
+            }
         }
         else {
             char c = key.charAt(index);
             TrieNode<E> next = node.children.get(c);
             node.children.put(c, delete(next, key, index + 1));
+            if (node.children.get(c) == null) {
+                node.children.remove(c);
+            }
         }
 
-        // remove sub-Trie at current node if element + children are null
-        if (node.element != null) return node;
-        if (node.children.isEmpty()) return null;
+        if (node.element == null && node.children.isEmpty()) {
+            nodesSize--;
+            return null;
+        }
         return node;
     }
 

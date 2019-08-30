@@ -1,24 +1,26 @@
-package edu.teikav.robot.parser.util;
+package edu.teikav.robot.parser.infrastructure;
 
+import edu.teikav.robot.parser.util.GraphUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.GraphPath;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public class GraphTests {
+@Slf4j
+@DisplayName("Unit-Test: 3rd party Graph library")
+class GraphTests {
 
-    private Logger logger = LoggerFactory.getLogger(GraphTests.class);
     private GraphUtils graphUtils = new GraphUtils();
 
     @Test
-    public void findAllPathsNoVertexLoopExample1() {
+    void findAllPathsNoVertexLoopExample1() {
 
         List<String> parts = Arrays.asList("TERM", "GRAMMAR_TYPE", "TRANSLATION", "EXAMPLE");
         List<String> transitions = Arrays.asList("TERM -> GRAMMAR_TYPE",
@@ -28,15 +30,15 @@ public class GraphTests {
                 "EXAMPLE -> TERM");
 
         DefaultDirectedGraph<String, DefaultEdge> graph = constructGraph(parts, transitions);
-        logger.info("Graph: {}", graph.toString());
+        log.info("Graph: {}", graph.toString());
 
         List<GraphPath<String, DefaultEdge>> paths = graphUtils.findAllPaths(graph, "TERM");
-        logger.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
-        assertEquals(2, paths.size());
+        log.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
+        assertThat(paths.size()).isEqualTo(2);
     }
 
     @Test
-    public void findAllPathsNoVertexLoopExample2() {
+    void findAllPathsNoVertexLoopExample2() {
 
         List<String> parts = Arrays.asList("A", "B", "C", "D", "E");
         List<String> transitions = Arrays.asList("A -> B",
@@ -48,15 +50,15 @@ public class GraphTests {
                 "E -> A");
 
         DefaultDirectedGraph<String, DefaultEdge> graph = constructGraph(parts, transitions);
-        logger.info("Graph: {}", graph.toString());
+        log.info("Graph: {}", graph.toString());
 
         List<GraphPath<String, DefaultEdge>> paths = graphUtils.findAllPaths(graph, "A");
-        logger.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
-        assertEquals(4, paths.size());
+        log.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
+        assertThat(paths.size()).isEqualTo(4);
     }
 
     @Test
-    public void findAllPathsNoVertexLoopExample3() {
+    void findAllPathsNoVertexLoopExample3() {
 
         List<String> parts = Arrays.asList("A", "B", "C", "D", "E", "F");
         List<String> transitions = Arrays.asList("A -> B",
@@ -72,15 +74,15 @@ public class GraphTests {
         );
 
         DefaultDirectedGraph<String, DefaultEdge> graph = constructGraph(parts, transitions);
-        logger.info("Graph: {}", graph.toString());
+        log.info("Graph: {}", graph.toString());
 
         List<GraphPath<String, DefaultEdge>> paths = graphUtils.findAllPaths(graph, "A");
-        logger.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
-        assertEquals(4, paths.size());
+        log.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
+        assertThat(paths.size()).isEqualTo(4);
     }
 
     @Test
-    public void findAllPathsWithVertexLoopExample1() {
+    void findAllPathsWithVertexLoopExample1() {
 
         List<String> parts = Arrays.asList("A", "B", "C", "D");
         List<String> transitions = Arrays.asList("A -> B",
@@ -91,15 +93,15 @@ public class GraphTests {
         );
 
         DefaultDirectedGraph<String, DefaultEdge> graph = constructGraph(parts, transitions);
-        logger.info("Graph: {}", graph.toString());
+        log.info("Graph: {}", graph.toString());
 
         List<GraphPath<String, DefaultEdge>> paths = graphUtils.findAllPaths(graph, "A",3);
-        logger.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
-        assertEquals(4, paths.size());
+        log.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
+        assertThat(paths.size()).isEqualTo(4);
     }
 
     @Test
-    public void findAllPathsWithVertexLoopExample2() {
+    void findAllPathsWithVertexLoopExample2() {
 
         List<String> parts = Arrays.asList("A", "B", "C", "D", "E");
         List<String> transitions = Arrays.asList("A -> B",
@@ -112,15 +114,15 @@ public class GraphTests {
                 "E -> A");
 
         DefaultDirectedGraph<String, DefaultEdge> graph = constructGraph(parts, transitions);
-        logger.info("Graph: {}", graph.toString());
+        log.info("Graph: {}", graph.toString());
 
         List<GraphPath<String, DefaultEdge>> paths = graphUtils.findAllPaths(graph, "A", 3);
-        logger.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
-        assertEquals(16, paths.size());
+        log.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
+        assertThat(paths.size()).isEqualTo(16);
     }
 
     @Test
-    public void findAllPathsWithVertexLoopExample3() {
+    void findAllPathsWithVertexLoopExample3() {
 
         List<String> parts = Arrays.asList("A", "B", "C");
         List<String> transitions = Arrays.asList("A -> B",
@@ -130,11 +132,11 @@ public class GraphTests {
                 "C -> A");
 
         DefaultDirectedGraph<String, DefaultEdge> graph = constructGraph(parts, transitions);
-        logger.info("Graph: {}", graph.toString());
+        log.info("Graph: {}", graph.toString());
 
         List<GraphPath<String, DefaultEdge>> paths = graphUtils.findAllPaths(graph, "A", 3);
-        logger.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
-        assertEquals(8, paths.size());
+        log.info("Number of paths: {}\nPaths: {}", paths.size(), paths);
+        assertThat(paths.size()).isEqualTo(8);
     }
 
     private DefaultDirectedGraph<String, DefaultEdge> constructGraph(List<String> vocabularyParts,

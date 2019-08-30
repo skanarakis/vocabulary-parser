@@ -1,4 +1,4 @@
-package edu.teikav.robot.parser;
+package edu.teikav.robot.parser.util;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

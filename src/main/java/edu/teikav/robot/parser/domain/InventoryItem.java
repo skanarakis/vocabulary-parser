@@ -1,10 +1,15 @@
 package edu.teikav.robot.parser.domain;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
+@EqualsAndHashCode
 public class InventoryItem {
 
-    private String term;
+    private final String term;
     private SpeechPart termType;
     private String translation;
     private String example;
@@ -15,8 +20,90 @@ public class InventoryItem {
     private String phrase;
     private String synonyms;
 
-    public InventoryItem(String term) {
-        this.term = term;
+    public static class Builder {
+        // Required
+        private final String term;
+
+        // Optional
+        private SpeechPart termType;
+        private String translation;
+        private String example;
+        private String pronunciation;
+        private String derivative;
+        private String opposite;
+        private String verbParticiples;
+        private String phrase;
+        private String synonyms;
+
+        public Builder(String term) {
+            this.term = term;
+        }
+
+        public Builder ofType(SpeechPart termType) {
+            this.termType = termType;
+            return this;
+        }
+
+        public Builder translatedAs(String translation) {
+            this.translation = translation;
+            return this;
+        }
+
+        public Builder havingExample(String example) {
+            this.example = example;
+            return this;
+        }
+
+        public Builder pronouncedAs(String pronunciation) {
+            this.pronunciation = pronunciation;
+            return this;
+        }
+
+        public Builder withDerivate(String derivate) {
+            this.derivative = derivate;
+            return this;
+        }
+
+        public Builder withOpposite(String opposite) {
+            this.opposite = opposite;
+            return this;
+        }
+
+        public Builder withVerbParticiples(String verbParticiples) {
+            this.verbParticiples = verbParticiples;
+            return this;
+        }
+
+        public Builder havingSynonym(String synonyms) {
+            this.synonyms = synonyms;
+            return this;
+        }
+
+        public Builder usedInPhrasesLike(String phrase) {
+            this.phrase = phrase;
+            return this;
+        }
+
+        public InventoryItem build() {
+            return new InventoryItem(this);
+        }
+    }
+
+    private InventoryItem(Builder builder) {
+        this.term = builder.term;
+        this.termType = builder.termType;
+        this.translation = builder.translation;
+        this.example = builder.example;
+        this.pronunciation = builder.pronunciation;
+        this.derivative = builder.derivative;
+        this.opposite = builder.opposite;
+        this.verbParticiples = builder.verbParticiples;
+        this.phrase = builder.phrase;
+        this.synonyms = builder.synonyms;
+    }
+
+    public static InventoryItem createEmptyItemFor(String term) {
+        return new Builder(term).build();
     }
 
     public InventoryItem(InventoryItem item) {
@@ -29,94 +116,7 @@ public class InventoryItem {
         this.opposite = item.getOpposite();
         this.verbParticiples = item.getVerbParticiples();
         this.phrase = item.getPhrase();
-    }
-
-    public void setTermType(SpeechPart termType) {
-        this.termType = termType;
-    }
-
-    public void setTranslation(String translation) {
-        this.translation = translation;
-    }
-
-    public void setExample(String example) {
-        this.example = example;
-    }
-
-    public String getTerm() {
-        return term;
-    }
-
-    public SpeechPart getTermType() {
-        return termType;
-    }
-
-    public String getTranslation() {
-        return translation;
-    }
-
-    public String getExample() {
-        return example;
-    }
-
-    public String getPronunciation() {
-        return pronunciation;
-    }
-
-    public void setPronunciation(String pronunciation) {
-        this.pronunciation = pronunciation;
-    }
-
-    public String getDerivative() {
-        return derivative;
-    }
-
-    public void setDerivative(String derivative) {
-        this.derivative = derivative;
-    }
-
-    public String getOpposite() { return opposite; }
-
-    public void setOpposite(String opposite) { this.opposite = opposite; }
-
-    public String getVerbParticiples() {
-        return verbParticiples;
-    }
-
-    public void setVerbParticiples(String verbParticiples) {
-        this.verbParticiples = verbParticiples;
-    }
-
-    public String getPhrase() { return phrase; }
-
-    public void setPhrase(String phrase) { this.phrase = phrase; }
-
-    public String getSynonyms() { return synonyms; }
-
-    public void setSynonyms(String synonyms) { this.synonyms = synonyms; }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        InventoryItem that = (InventoryItem) o;
-        return Objects.equals(term, that.term) &&
-                termType == that.termType &&
-                Objects.equals(translation, that.translation) &&
-                Objects.equals(example, that.example) &&
-                Objects.equals(pronunciation, that.pronunciation) &&
-                Objects.equals(derivative, that.derivative) &&
-                Objects.equals(opposite, that.opposite) &&
-                Objects.equals(phrase, that.phrase) &&
-                Objects.equals(synonyms, that.synonyms) &&
-                Objects.equals(verbParticiples, that.verbParticiples);
-    }
-
-    @Override
-    public int hashCode() {
-
-        return Objects.hash(term, termType.toString(), translation, example,
-                pronunciation, derivative, opposite, verbParticiples, phrase, synonyms);
+        this.synonyms = item.getSynonyms();
     }
 
     @Override

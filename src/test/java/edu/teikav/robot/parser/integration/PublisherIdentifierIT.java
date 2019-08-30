@@ -1,4 +1,4 @@
-package edu.teikav.robot.parser.processors;
+package edu.teikav.robot.parser.integration;
 
 import com.rtfparserkit.parser.IRtfListener;
 import com.rtfparserkit.parser.IRtfParser;
@@ -6,22 +6,21 @@ import com.rtfparserkit.parser.IRtfSource;
 import com.rtfparserkit.parser.RtfStreamSource;
 import com.rtfparserkit.parser.standard.StandardRtfParser;
 import com.rtfparserkit.utils.RtfDumpListener;
-import edu.teikav.robot.parser.FileUtils;
-import edu.teikav.robot.parser.IntegrationTest;
 import edu.teikav.robot.parser.domain.PublisherDocumentInput;
 import edu.teikav.robot.parser.domain.PublisherSpecification;
+import edu.teikav.robot.parser.processors.PublisherIdentifier;
+import edu.teikav.robot.parser.processors.VocabularySeparator;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import edu.teikav.robot.parser.services.YAMLPublisherSpecRegistryImpl;
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
+import edu.teikav.robot.parser.util.FileUtils;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -34,20 +33,26 @@ import java.util.Optional;
 
 import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
 import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
-@RunWith(SpringRunner.class)
-@Category(IntegrationTest.class)
-public class PublisherIdentifierIT {
+@Tag("integration")
+@DisplayName("Integration-Test: Publisher Identifier Module")
+@ExtendWith(SpringExtension.class)
+class PublisherIdentifierIT {
 
     @MockBean
     private PublisherSpecificationRegistry grammarRegistry;
 
-    @Autowired
-    private Yaml yaml;
+    private static Yaml yaml;
+
+    @BeforeAll
+    static void init() {
+        yaml = new Yaml(new Constructor(PublisherDocumentInput.class));
+    }
 
     @Test
-    public void identifyGrammar_mockedRegistry() throws IOException, XMLStreamException {
+    void identifyGrammar_mockedRegistry() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "identifyGrammar_mockedRegistry.xml");
@@ -77,7 +82,7 @@ public class PublisherIdentifierIT {
     }
 
     @Test
-    public void identifyGrammar_whenRealRegistry_hasOneRegisteredGrammar()
+    void identifyGrammar_whenRealRegistry_hasOneRegisteredGrammar()
             throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
@@ -90,7 +95,7 @@ public class PublisherIdentifierIT {
                 .getClassLoader()
                 .getResourceAsStream("publishers/one-publisher.yaml");
         spiedRegistry.registerPublisherSpecification(publishersInputStream);
-        Assertions.assertThat(spiedRegistry.registrySize()).isEqualTo(1);
+        assertThat(spiedRegistry.registrySize()).isEqualTo(1);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -106,7 +111,7 @@ public class PublisherIdentifierIT {
     }
 
     @Test
-    public void identifyGrammarOfFirstPublisher_whenRealRegistry_hasTwoRegisteredGrammars()
+    void identifyGrammarOfFirstPublisher_whenRealRegistry_hasTwoRegisteredGrammars()
             throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
@@ -119,7 +124,7 @@ public class PublisherIdentifierIT {
                 .getClassLoader()
                 .getResourceAsStream("publishers/two-publishers.yaml");
         spiedRegistry.registerPublisherSpecifications(publishersInputStream);
-        Assertions.assertThat(spiedRegistry.registrySize()).isEqualTo(2);
+        assertThat(spiedRegistry.registrySize()).isEqualTo(2);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-01.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -135,7 +140,7 @@ public class PublisherIdentifierIT {
     }
 
     @Test
-    public void identifyGrammarOfFirstPublisher_whenRealRegistry_hasManyRegisteredGrammars()
+    void identifyGrammarOfFirstPublisher_whenRealRegistry_hasManyRegisteredGrammars()
             throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
@@ -163,7 +168,7 @@ public class PublisherIdentifierIT {
     }
 
     @Test
-    public void identifyGrammarOfSecondPublisher_whenRealRegistry_hasTwoRegisteredGrammars()
+    void identifyGrammarOfSecondPublisher_whenRealRegistry_hasTwoRegisteredGrammars()
             throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
@@ -176,7 +181,7 @@ public class PublisherIdentifierIT {
                 .getClassLoader()
                 .getResourceAsStream("publishers/two-publishers.yaml");
         spiedRegistry.registerPublisherSpecifications(publishersInputStream);
-        Assertions.assertThat(spiedRegistry.registrySize()).isEqualTo(2);
+        assertThat(spiedRegistry.registrySize()).isEqualTo(2);
 
         InputStream inputStream = new FileInputStream(TEST_INPUT_RTF_DOCS_PATH + "sample-vocabulary-02.rtf");
         IRtfSource source = new RtfStreamSource(inputStream);
@@ -192,7 +197,7 @@ public class PublisherIdentifierIT {
     }
 
     @Test
-    public void identifyGrammarOfThirdPublisher_whenRealRegistry_hasManyRegisteredGrammars()
+    void identifyGrammarOfThirdPublisher_whenRealRegistry_hasManyRegisteredGrammars()
             throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
@@ -220,7 +225,7 @@ public class PublisherIdentifierIT {
     }
 
     @Test
-    public void identifyGrammarOfGePublisher_whenRealRegistry_hasManyRegisteredGrammars()
+    void identifyGrammarOfGePublisher_whenRealRegistry_hasManyRegisteredGrammars()
             throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
@@ -248,7 +253,7 @@ public class PublisherIdentifierIT {
     }
 
     @Test
-    public void produceXmlFromRealRtfDocument() throws IOException, XMLStreamException {
+    void produceXmlFromRealRtfDocument() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "test-xml-production.xml");
@@ -259,14 +264,4 @@ public class PublisherIdentifierIT {
         IRtfListener xmlProducer = new RtfDumpListener(outputStream);
         parser.parse(source, xmlProducer);
     }
-
-    @TestConfiguration
-    static class PublisherIdentifierTestConfiguration {
-
-        @Bean
-        Yaml yaml() {
-            return new Yaml(new Constructor(PublisherDocumentInput.class));
-        }
-    }
-
 }

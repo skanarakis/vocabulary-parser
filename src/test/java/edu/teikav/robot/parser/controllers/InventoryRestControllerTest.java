@@ -3,14 +3,12 @@ package edu.teikav.robot.parser.controllers;
 import edu.teikav.robot.parser.domain.InventoryItem;
 import edu.teikav.robot.parser.domain.SpeechPart;
 import edu.teikav.robot.parser.services.InventoryService;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
@@ -21,48 +19,62 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@WebMvcTest(InventoryRestController.class)
-public class InventoryRestControllerTest {
+@WebMvcTest(controllers = InventoryRestController.class)
+@DisplayName("Slice-Test: Inventory REST Controller")
+class InventoryRestControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockBean
     private InventoryService inventoryService;
 
     @Test
-    public void retrieveSingleInventoryItem() throws Exception {
+    void retrieveSingleInventoryItem() throws Exception {
 
         String term = "testTerm";
+        String translation = "some translation";
+        String example = "some example";
+        SpeechPart speechPart = SpeechPart.NOUN;
 
-        InventoryItem item = new InventoryItem(term);
-        item.setTermType(SpeechPart.NOUN);
-        item.setTranslation("some translation");
-        item.setExample("some example");
+        InventoryItem item = new InventoryItem.Builder(term)
+                .ofType(speechPart)
+                .translatedAs(translation)
+                .havingExample(example)
+                .build();
 
         Mockito.when(inventoryService.getItem(term)).thenReturn(item);
         mockMvc.perform(get("/inventory/terms/" + term))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("speechPart", equalTo("NOUN")))
-                .andExpect(jsonPath("translation", equalTo("some translation")))
-                .andExpect(jsonPath("example", equalTo("some example")));
+                .andExpect(jsonPath("speechPart", equalTo(speechPart.toString())))
+                .andExpect(jsonPath("translation", equalTo(translation)))
+                .andExpect(jsonPath("example", equalTo(example)));
     }
 
     @Test
-    public void retrieveAllInventoryItems() throws Exception {
+    void retrieveAllInventoryItems() throws Exception {
 
         String term1 = "testTerm1";
-        String term2 = "testTerm2";
+        String translation1 = "some translation 1";
+        String example1 = "some example 1";
+        SpeechPart speechPart1 = SpeechPart.NOUN;
 
-        InventoryItem item1 = new InventoryItem(term1);
-        item1.setTermType(SpeechPart.NOUN);
-        item1.setTranslation("some translation 1");
-        item1.setExample("some example 1");
-        InventoryItem item2 = new InventoryItem(term2);
-        item2.setTermType(SpeechPart.VERB);
-        item2.setTranslation("some translation 2");
-        item2.setExample("some example 2");
+        String term2 = "testTerm2";
+        String translation2 = "some translation 2";
+        String example2 = "some example 2";
+        SpeechPart speechPart2 = SpeechPart.VERB;
+
+        InventoryItem item1 = new InventoryItem.Builder(term1)
+                .ofType(speechPart1)
+                .translatedAs(translation1)
+                .havingExample(example1)
+                .build();
+        InventoryItem item2 = new InventoryItem.Builder(term2)
+                .ofType(speechPart2)
+                .translatedAs(translation2)
+                .havingExample(example2)
+                .build();
+
         Map<String, InventoryItem> mockedItems = new HashMap<>();
         mockedItems.put(term1, item1);
         mockedItems.put(term2, item2);
@@ -71,24 +83,16 @@ public class InventoryRestControllerTest {
         mockMvc.perform(get("/inventory/terms"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vocabularyInventory." + term1 + ".speechPart",
-                        equalTo(SpeechPart.NOUN.toString())))
+                        equalTo(speechPart1.toString())))
                 .andExpect(jsonPath("$.vocabularyInventory." + term1 + ".translation",
-                        equalTo("some translation 1")))
+                        equalTo(translation1)))
                 .andExpect(jsonPath("$.vocabularyInventory." + term1 + ".example",
-                        equalTo("some example 1")))
+                        equalTo(example1)))
                 .andExpect(jsonPath("$.vocabularyInventory." + term2 + ".speechPart",
-                        equalTo(SpeechPart.VERB.toString())))
+                        equalTo(speechPart2.toString())))
                 .andExpect(jsonPath("$.vocabularyInventory." + term2 + ".translation",
-                        equalTo("some translation 2")))
+                        equalTo(translation2)))
                 .andExpect(jsonPath("$.vocabularyInventory." + term2 + ".example",
-                        equalTo("some example 2")));
-    }
-
-    @TestConfiguration
-    static class InventoryRestControllerTestConfig {
-        @Bean
-        InventoryService getInventoryService() {
-            return Mockito.mock(InventoryService.class);
-        }
+                        equalTo(example2)));
     }
 }

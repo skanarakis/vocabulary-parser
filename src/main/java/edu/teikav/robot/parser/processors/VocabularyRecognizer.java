@@ -130,7 +130,7 @@ public class VocabularyRecognizer {
             logger.debug("Caching TERM segment {}", tokenStringValue);
             cachedPart.append(tokenStringValue);
         } else {
-            currentItem = new InventoryItem(tokenStringValue);
+            currentItem = InventoryItem.createEmptyItemFor(tokenStringValue);
             logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, tokenStringValue);
         }
         isFirstStreamedToken = false;
@@ -252,7 +252,7 @@ public class VocabularyRecognizer {
     private void processVocabularyPart(String tokenStringValue) {
 
         if (activeVocabularyPart.equals("TERM")) {
-            currentItem = new InventoryItem(tokenStringValue);
+            currentItem = InventoryItem.createEmptyItemFor(tokenStringValue);
             logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, tokenStringValue);
         } else {
             ItemUpdateSnippet snippet = itemUpdateSnippets.get(activeVocabularyPart);
@@ -275,7 +275,7 @@ public class VocabularyRecognizer {
         String cachedPartString = cachedPart.toString().trim();
         logger.debug("Time to handle cache [{}] for [{}]", cachedPartString, previousVocabularyPart);
         if (previousVocabularyPart.equals("TERM")) {
-            currentItem = new InventoryItem(cachedPartString);
+            currentItem = InventoryItem.createEmptyItemFor(cachedPartString);
             logger.debug(NEW_INVENTORY_ITEM_DEBUG_MESSAGE, cachedPartString);
         } else {
             ItemUpdateSnippet snippet = itemUpdateSnippets.get(previousVocabularyPart);

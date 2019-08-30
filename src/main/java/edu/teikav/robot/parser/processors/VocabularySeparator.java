@@ -78,7 +78,7 @@ public class VocabularySeparator implements IRtfListener {
         this(null);
     }
 
-    VocabularySeparator(OutputStream outputStream) throws XMLStreamException {
+    public VocabularySeparator(OutputStream outputStream) throws XMLStreamException {
         if (outputStream != null) {
             this.rtfDumpListener = new RtfDumpListener(outputStream);
         }

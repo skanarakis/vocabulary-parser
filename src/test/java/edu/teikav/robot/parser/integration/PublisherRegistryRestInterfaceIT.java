@@ -1,16 +1,16 @@
-package edu.teikav.robot.parser.controllers;
+package edu.teikav.robot.parser.integration;
 
+import edu.teikav.robot.parser.controllers.PublisherRegistryRestController;
 import edu.teikav.robot.parser.domain.PublisherDocumentInput;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import edu.teikav.robot.parser.services.YAMLPublisherSpecRegistryImpl;
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -23,9 +23,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-@WebMvcTest(PublisherRegistryRestController.class)
-public class PublisherRegistryRestControllerTest {
+@WebMvcTest(controllers = PublisherRegistryRestController.class)
+@DisplayName("Integration-Test: Publisher Registry REST Interface")
+class PublisherRegistryRestInterfaceIT {
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,20 +33,20 @@ public class PublisherRegistryRestControllerTest {
     @Autowired
     private PublisherSpecificationRegistry registry;
 
-    @After
-    public void initializeRegistry() {
+    @AfterEach
+    void initializeRegistry() {
         registry.removeAllPublisherSpecs();
     }
 
     @Test
-    public void whenNoPublishers_shouldReturnEmptyList() throws Exception {
+    void whenNoPublishers_shouldReturnEmptyList() throws Exception {
         mockMvc.perform(get("/registry/publishers"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
     }
 
     @Test
-    public void whenRegisteringSinglePublisher_shouldReturnIt() throws Exception {
+    void whenRegisteringSinglePublisher_shouldReturnIt() throws Exception {
         mockMvc.perform(post("/registry/publishers")
                 .contentType("text/plain;charset=UTF-8")
                 .content(
@@ -142,7 +142,7 @@ public class PublisherRegistryRestControllerTest {
     }
 
     @Test
-    public void whenRegisteringTwoPublishers_shouldReturnThemAll() throws Exception {
+    void whenRegisteringTwoPublishers_shouldReturnThemAll() throws Exception {
         mockMvc.perform(post("/registry/publishers")
                 .contentType("text/plain;charset=UTF-8")
                 .content(

@@ -5,23 +5,26 @@ import edu.teikav.robot.parser.domain.PublisherSpecification;
 import edu.teikav.robot.parser.domain.SpeechPart;
 import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static edu.teikav.robot.parser.domain.InventoryItem.createEmptyItemFor;
 import static org.mockito.ArgumentMatchers.any;
 
-@RunWith(MockitoJUnitRunner.class)
-public class VocabularyRecognizerStructureTwoTest {
+@ExtendWith(SpringExtension.class)
+@DisplayName("Unit-Test: Vocabulary Recognizer - II")
+class VocabularyRecognizerStructureTwoTest {
 
     private VocabularyRecognizer recognizer;
 
@@ -30,8 +33,8 @@ public class VocabularyRecognizerStructureTwoTest {
     @Mock
     private InventoryService inventoryService;
 
-    @BeforeClass
-    public static void init() {
+    @BeforeAll
+    static void init() {
         registry = Mockito.mock(PublisherSpecificationRegistry.class);
         PublisherSpecification spec = Mockito.mock(PublisherSpecification.class);
 
@@ -86,13 +89,13 @@ public class VocabularyRecognizerStructureTwoTest {
         Mockito.when(spec.getSpeechPartFor("(phr v)")).thenReturn(Optional.of(SpeechPart.PHRASAL_VERB));
     }
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         recognizer = new VocabularyRecognizer(registry, inventoryService);
     }
 
     @Test
-    public void acceptSingleTermWithAllPartsInIt() {
+    void acceptSingleTermWithAllPartsInIt() {
 
         String term = "rowing boat";
         String noun = "(n)";
@@ -104,7 +107,7 @@ public class VocabularyRecognizerStructureTwoTest {
 
         recognizer.recognizeVocabulary(streamOfTokens);
 
-        InventoryItem item = new InventoryItem(term);
+        InventoryItem item = createEmptyItemFor(term);
         item.setTermType(SpeechPart.NOUN);
         item.setTranslation(termTranslation);
         item.setExample(termExample);
@@ -116,7 +119,7 @@ public class VocabularyRecognizerStructureTwoTest {
     }
 
     @Test
-    public void acceptFourTermsInTotalWithVariousStructures() {
+    void acceptFourTermsInTotalWithVariousStructures() {
 
         String verb = "(v)";
         String adjective = "(adj)";
@@ -151,7 +154,7 @@ public class VocabularyRecognizerStructureTwoTest {
     }
 
     @Test
-    public void acceptStreamOfTermsWithMixedRules_TestA() {
+    void acceptStreamOfTermsWithMixedRules_TestA() {
 
         Stream<String> streamOfTokens = Stream.of(
                 "configure", "(v)", "ρυθμίζω", "System was properly configured",
@@ -174,7 +177,7 @@ public class VocabularyRecognizerStructureTwoTest {
     }
 
     @Test
-    public void acceptStreamOfTermsWithMixedRules_TestB() {
+    void acceptStreamOfTermsWithMixedRules_TestB() {
 
         Stream<String> streamOfTokens = Stream.of(
                 "termA", "(v)", "πρώτος όρος", "Term A Example",

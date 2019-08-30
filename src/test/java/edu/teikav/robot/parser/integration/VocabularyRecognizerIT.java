@@ -1,24 +1,21 @@
-package edu.teikav.robot.parser.processors;
+package edu.teikav.robot.parser.integration;
 
 import com.rtfparserkit.parser.IRtfParser;
 import com.rtfparserkit.parser.IRtfSource;
 import com.rtfparserkit.parser.RtfStreamSource;
 import com.rtfparserkit.parser.standard.StandardRtfParser;
-import edu.teikav.robot.parser.FileUtils;
-import edu.teikav.robot.parser.IntegrationTest;
 import edu.teikav.robot.parser.domain.PublisherDocumentInput;
 import edu.teikav.robot.parser.domain.SpeechPart;
+import edu.teikav.robot.parser.processors.PublisherIdentifier;
+import edu.teikav.robot.parser.processors.VocabularyRecognizer;
+import edu.teikav.robot.parser.processors.VocabularySeparator;
 import edu.teikav.robot.parser.services.InMemoryInventoryServiceImpl;
 import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import edu.teikav.robot.parser.services.YAMLPublisherSpecRegistryImpl;
+import edu.teikav.robot.parser.util.FileUtils;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.junit.jupiter.api.*;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
@@ -31,16 +28,16 @@ import java.io.OutputStream;
 import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
 import static edu.teikav.robot.parser.ParserStaticConstants.TEST_OUTPUT_XML_DOCS_PATH;
 
-@RunWith(SpringRunner.class)
-@Category(IntegrationTest.class)
-public class VocabularyRecognizerIT {
+@Tag("integration")
+@DisplayName("Integration-Test: Vocabulary Recognizer Module")
+class VocabularyRecognizerIT {
 
     private static PublisherSpecificationRegistry registry;
 
     private InventoryService inventoryService;
 
-    @BeforeClass
-    public static void preloadRegistry() {
+    @BeforeAll
+    static void preloadRegistry() {
 
         registry = new YAMLPublisherSpecRegistryImpl(new Yaml(new Constructor(PublisherDocumentInput.class)));
         InputStream publishersInputStream = VocabularyRecognizerIT.class
@@ -49,13 +46,13 @@ public class VocabularyRecognizerIT {
         registry.registerPublisherSpecifications(publishersInputStream);
     }
 
-    @Before
-    public void initialize() {
+    @BeforeEach
+    void initialize() {
         inventoryService = new InMemoryInventoryServiceImpl();
     }
 
     @Test
-    public void inventoriesVocabularyForFirstPublisher() throws IOException, XMLStreamException {
+    void inventoriesVocabularyForFirstPublisher() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "first-pub-voc-separation.xml");
@@ -89,7 +86,7 @@ public class VocabularyRecognizerIT {
     }
 
     @Test
-    public void inventoriesVocabularyForSecondPublisher() throws IOException, XMLStreamException {
+    void inventoriesVocabularyForSecondPublisher() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "2nd-pub-voc-separation.xml");
@@ -120,7 +117,7 @@ public class VocabularyRecognizerIT {
     }
 
     @Test
-    public void inventoriesVocabularyForThirdPublisher() throws IOException, XMLStreamException {
+    void inventoriesVocabularyForThirdPublisher() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "3rd-pub-voc-separation.xml");
@@ -153,7 +150,7 @@ public class VocabularyRecognizerIT {
     }
 
     @Test
-    public void inventoriesVocabularyForThirdPublisherComplete() throws IOException, XMLStreamException {
+    void inventoriesVocabularyForThirdPublisherComplete() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "3rd-pub-complete-voc-separation.xml");
@@ -179,7 +176,7 @@ public class VocabularyRecognizerIT {
     }
 
     @Test
-    public void inventoriesVocabularyForGePublisher() throws IOException, XMLStreamException {
+    void inventoriesVocabularyForGePublisher() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "Ge-pub-complete-voc-separation.xml");
@@ -204,7 +201,7 @@ public class VocabularyRecognizerIT {
     }
 
     @Test
-    public void inventoriesVocabularyForPublisherE() throws IOException, XMLStreamException {
+    void inventoriesVocabularyForPublisherE() throws IOException, XMLStreamException {
 
         OutputStream outputStream = FileUtils
                 .getOutputStream(TEST_OUTPUT_XML_DOCS_PATH + "E-pub-complete-voc-separation.xml");
