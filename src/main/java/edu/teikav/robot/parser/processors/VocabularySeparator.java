@@ -6,6 +6,7 @@ import com.rtfparserkit.utils.RtfDumpListener;
 import edu.teikav.robot.parser.domain.FontColor;
 import edu.teikav.robot.parser.domain.Language;
 import edu.teikav.robot.parser.domain.VocabularyToken;
+import edu.teikav.robot.parser.exceptions.InfrastructureSetupException;
 import edu.teikav.robot.parser.util.TokenUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,13 +75,17 @@ public class VocabularySeparator implements IRtfListener {
 
     private List<VocabularyToken> vocPartsStream;
 
-    public VocabularySeparator() throws XMLStreamException {
+    public VocabularySeparator() {
         this(null);
     }
 
-    public VocabularySeparator(OutputStream outputStream) throws XMLStreamException {
+    public VocabularySeparator(OutputStream outputStream) {
         if (outputStream != null) {
-            this.rtfDumpListener = new RtfDumpListener(outputStream);
+            try {
+                this.rtfDumpListener = new RtfDumpListener(outputStream);
+            } catch (XMLStreamException e) {
+                throw new InfrastructureSetupException(e);
+            }
         }
         this.currentToken = new VocabularyToken();
         this.colorMap = new HashMap<>();

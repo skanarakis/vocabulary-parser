@@ -1,73 +1,84 @@
-package edu.teikav.robot.parser;
+package edu.teikav.robot.parser.services;
 
 import com.rtfparserkit.parser.IRtfParser;
 import com.rtfparserkit.parser.IRtfSource;
 import com.rtfparserkit.parser.RtfStreamSource;
 import com.rtfparserkit.parser.standard.StandardRtfParser;
+import edu.teikav.robot.parser.exceptions.VocabularyParsingException;
 import edu.teikav.robot.parser.processors.PublisherIdentifier;
 import edu.teikav.robot.parser.processors.VocabularyRecognizer;
 import edu.teikav.robot.parser.processors.VocabularySeparator;
-import edu.teikav.robot.parser.services.InventoryService;
-import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.*;
 import java.util.Objects;
 
-@Component
-public class VocabularyParser {
+@Service
+public class RtfVocabularyParserImpl implements VocabularyParsingService {
 
-    private Logger logger = LoggerFactory.getLogger(VocabularyParser.class);
+    private Logger logger = LoggerFactory.getLogger(RtfVocabularyParserImpl.class);
 
     private final PublisherSpecificationRegistry registry;
     private final InventoryService inventoryService;
 
     @Autowired
-    public VocabularyParser(PublisherSpecificationRegistry registry, InventoryService inventoryService) {
+    public RtfVocabularyParserImpl(PublisherSpecificationRegistry registry, InventoryService inventoryService) {
         this.registry = registry;
         this.inventoryService = inventoryService;
     }
 
-    public void parseVocabulary(final String rtfDoc) throws IOException, XMLStreamException {
+    @Override
+    public void parseVocabulary(final String vocabularyDocument) {
 
-        Objects.requireNonNull(rtfDoc,"Empty contents passed for parsing");
+        Objects.requireNonNull(vocabularyDocument,"Empty contents passed for parsing");
         // Utilizing 3rd party library for RTF
-        IRtfSource rtfSource = newRtfSourceFromString(rtfDoc);
+        IRtfSource rtfSource = newRtfSourceFromString(vocabularyDocument);
 
         doParse(rtfSource, null);
     }
 
-    public void parseVocabulary(String rtfDoc, String publisher) throws IOException, XMLStreamException {
-        Objects.requireNonNull(rtfDoc,"Input RTF vocabulary document is null");
+    @Override
+    public void parseVocabulary(final String vocabularyDocument, String publisher) {
+        Objects.requireNonNull(vocabularyDocument,"Input RTF vocabulary document is null");
         Objects.requireNonNull(publisher,"Publisher name is null");
 
         // Utilizing 3rd party library for RTF
-        IRtfSource rtfSource = newRtfSourceFromString(rtfDoc);
+        IRtfSource rtfSource = newRtfSourceFromString(vocabularyDocument);
 
         doParse(rtfSource, publisher);
     }
 
-    void parseVocabulary(final File vocabularyRtfDoc) throws IOException, XMLStreamException {
+    @Override
+    public void parseVocabulary(final File vocabularyRtfDoc) {
 
         Objects.requireNonNull(vocabularyRtfDoc,"Input RTF vocabulary document is null");
         String docAbsolutePath = vocabularyRtfDoc.getAbsolutePath();
 
         // Utilizing 3rd party library for RTF
-        IRtfSource rtfSource = newRtfSourceFromFile(docAbsolutePath);
+        IRtfSource rtfSource;
+        try {
+            rtfSource = newRtfSourceFromFile(docAbsolutePath);
+        } catch (FileNotFoundException e) {
+            throw new VocabularyParsingException(e);
+        }
 
         doParse(rtfSource, null);
     }
 
-    private void doParse(IRtfSource rtfSource, String publisher) throws XMLStreamException, IOException {
-        IRtfParser parser = new StandardRtfParser();
+    private void doParse(IRtfSource rtfSource, String publisher) {
 
         VocabularySeparator vocabularySeparator = new VocabularySeparator();
-        parser.parse(rtfSource, vocabularySeparator);
+
+        IRtfParser parser = new StandardRtfParser();
+        try {
+            parser.parse(rtfSource, vocabularySeparator);
+        } catch (IOException e) {
+            throw new VocabularyParsingException(e);
+        }
 
         if (StringUtils.isEmpty(publisher)) {
             registry.resetActiveSpec();

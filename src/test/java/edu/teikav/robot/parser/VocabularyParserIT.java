@@ -2,6 +2,7 @@ package edu.teikav.robot.parser;
 
 import edu.teikav.robot.parser.services.InventoryService;
 import edu.teikav.robot.parser.services.PublisherSpecificationRegistry;
+import edu.teikav.robot.parser.services.RtfVocabularyParserImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -10,9 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 import static edu.teikav.robot.parser.ParserStaticConstants.TEST_INPUT_RTF_DOCS_PATH;
@@ -26,7 +25,7 @@ class VocabularyParserIT {
     private Logger logger = LoggerFactory.getLogger(VocabularyParserIT.class);
 
     @Autowired
-    private VocabularyParser vocabularyParser;
+    private RtfVocabularyParserImpl vocabularyParser;
 
     @Autowired
     private InventoryService inventoryService;
@@ -35,7 +34,7 @@ class VocabularyParserIT {
     PublisherSpecificationRegistry registry;
 
     @Test
-    void parseVocabularyForTwoPublishers() throws IOException, XMLStreamException {
+    void parseVocabularyForTwoPublishers() {
         prepareRegistry();
 
         logger.info("parseVocabularyForFirstPublisher called ******************************");
